@@ -1,0 +1,18 @@
+CHANGELOG.md
+README.md
+SERVER_NOTES.md
+
+node_modules
+.github/
+
+yarn.lock
+*!!__*
+* copy*
+
+./node_modules 
+
+Dockerfile 
+
+.dockerignore 
+
+docker-compose.yml

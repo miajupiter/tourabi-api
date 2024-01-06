@@ -1,0 +1,28 @@
+version: '3.9'
+
+services:
+  # Mongodb service
+  mongo_db:
+    container_name: tourabi-mongo
+    image: mongo:latest
+    restart: always
+    ports:
+      - 27316:27017
+    volumes:
+      - mongo_data:/data/db
+
+  # Node api service
+  api:
+    container_name: tourabi-api
+    build: .
+    ports:
+      # local->container
+      - 8512:8502
+    environment:
+      HTTP_PORT: 8502
+      MONGODB_URI: mongodb://mongo_db:27017/tourabidb
+    depends_on: 
+      - mongo_db
+
+volumes:
+  mongo_data:
