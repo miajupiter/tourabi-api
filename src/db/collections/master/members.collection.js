@@ -17,7 +17,6 @@ module.exports = function (dbModel) {
       passive: { type: Boolean, default: false, index: true },
       createdDate: { type: Date, default: Date.now },
       modifiedDate: { type: Date, default: Date.now }
-     
     },
     { versionKey: false }
   )

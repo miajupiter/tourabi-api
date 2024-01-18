@@ -1,18 +1,21 @@
+# docker ignore
+
 CHANGELOG.md
 README.md
-SERVER_NOTES.md
-
 node_modules
-.github/
 
-yarn.lock
-*!!__*
+**!!__*
+
 * copy*
 
-./node_modules 
-
-Dockerfile 
-
-.dockerignore 
-
+.dockerignore
 docker-compose.yml
+Dockerfile
+.dockerignore
+node_modules
+npm-debug.log
+README.md
+.next
+.git
+.github/
+_scraper/
