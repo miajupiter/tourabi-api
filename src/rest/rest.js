@@ -22,7 +22,7 @@ module.exports = () => new Promise(async (resolve, reject) => {
 
   app.set('port', process.env.HTTP_PORT)
 
-  // app.use('/', express.static(path.join(__root, 'public')))
+  // app.use('/media', express.static(path.join(__root, '../public')))
 
   global.restControllers={
     auth: await util.moduleLoader(path.join(__dirname, '/controllers/auth'), '.controller.js'),

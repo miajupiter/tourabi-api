@@ -1,8 +1,8 @@
-FROM node:20
-# RUN npm i -g yarn
+FROM node:20.10-alpine3.19
 
 WORKDIR /app
-COPY ./package*.json .
+COPY ./package.json .
+COPY ./yarn.lock .
 RUN yarn install
 
 COPY . .

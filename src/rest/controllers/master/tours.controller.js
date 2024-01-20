@@ -37,8 +37,8 @@ function getList(dbModel, sessionDoc, req) {
   return new Promise((resolve, reject) => {
     let options = {
       page: req.query.page || (req.query.pageIndex || 0) + 1,
-      select:'_id title duration places images',
-      
+      select: '_id title description duration places images priceTable currency',
+
       // populate: [
       //   {
       //     path: 'tours',
@@ -51,7 +51,7 @@ function getList(dbModel, sessionDoc, req) {
       options.limit = req.query.pageSize || req.query.limit
 
     let filter = {}
-    if ((req.query.my || '').toString()=='true') {
+    if ((req.query.my || '').toString() == 'true') {
       filter.owner = sessionDoc.member
     }
     if ((req.query.passive || '') != '') {
@@ -61,18 +61,47 @@ function getList(dbModel, sessionDoc, req) {
     // if ((req.query.status || '') != '') {
     //   filter.status = req.query.status
     // }
-    console.log(`filter:`,filter)
-    dbModel.tours.paginate(filter, options).then(result=>{
+    console.log(`options:`, options)
+    const imageBaseUrl = 'https://miajupiter.com/media/tour-img01/'
+    // const imageBaseUrl = '/img/'
+    dbModel.tours.paginate(filter, options).then(result => {
+      var list = []
       result.docs.forEach(doc => {
-        doc.image=''
-        if(doc.images.length > 0) {
-          doc.image=doc.images[0].thumbnail || ''
+        var obj = Object.assign({}, doc)
+        obj.id = doc._id.toString()
+        obj.featuredImage = ''
+        obj.price = 0
+        obj.images = []
+        if (doc.images.length > 0) {
+          obj.featuredImage = {
+            src: imageBaseUrl + doc.images[0].image || '',
+            width: 500,
+            height: 500,
+          }
+          doc.images.forEach(e => {
+            obj.images.push({
+              src: imageBaseUrl + e.image,
+              width: 500,
+              height: 500,
+            })
+          })
         }
-        delete doc.images
-    
+        if (doc.priceTable && doc.priceTable.length > 0) {
+          //qwerty  tarih kontrolu ekle, en yakinlarda en dusukten belki
+          obj.price = doc.priceTable[0].price
+          console.log('doc.priceTable[0].price:',doc.priceTable[0].price)
+        }
+
+        obj.desc=(obj.description || '').substring(0,140) + '...'
+        list.push(obj)
       })
+
+      result.docs = list
+
+      // if (result.docs.length > 0) {
+      //   console.log(result.docs[0])
+      // }
       
-      console.log(`result:`,result)
       resolve(result)
     }).catch(reject)
   })
@@ -82,7 +111,7 @@ function post(dbModel, sessionDoc, req) {
   return new Promise((resolve, reject) => {
     let data = req.body || {}
     data._id = undefined
-    data.owner=sessionDoc.member
+    data.owner = sessionDoc.member
     let newDoc = new dbModel.tours(data)
 
     if (!epValidateSync(newDoc, reject)) return
@@ -95,25 +124,25 @@ function put(dbModel, sessionDoc, req) {
     if (req.params.param1 == undefined) return restError.param1(req, reject)
     let data = req.body || {}
     delete data._id
-    
+
     dbModel.tours
-      .findOne({ _id: req.params.param1, owner:sessionDoc.member  })
+      .findOne({ _id: req.params.param1, owner: sessionDoc.member })
       .then((doc) => {
         if (dbNull(doc, reject)) {
-          let newDoc=Object.assign(doc,data)
-          if (!epValidateSync(newDoc, (err)=>{
+          let newDoc = Object.assign(doc, data)
+          if (!epValidateSync(newDoc, (err) => {
             reject(err)
           })) return
-          newDoc.save().then(resp=>{
-            console.log('resp:',resp)
+          newDoc.save().then(resp => {
+            console.log('resp:', resp)
             resolve(resp)
-          }).catch(err=>{
+          }).catch(err => {
             console.log(err)
             reject(err)
           })
         }
       })
-      .catch(err=>{
+      .catch(err => {
         console.log(err)
         reject(err)
       })
@@ -126,7 +155,7 @@ function deleteItem(dbModel, sessionDoc, req) {
     let data = req.body || {}
     data._id = req.params.param1
 
-    dbModel.tours.removeOne(sessionDoc, { _id: data._id, owner:sessionDoc.member }).then(resolve).catch(err=>{
+    dbModel.tours.removeOne(sessionDoc, { _id: data._id, owner: sessionDoc.member }).then(resolve).catch(err => {
       console.log(err)
       reject(err)
     })

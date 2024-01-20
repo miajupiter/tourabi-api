@@ -2,11 +2,12 @@
 	require('use-strict')
 	require('colors')
 	require('dotenv').config()
-	
+
 	global.path = require('path')
 	global.fs = require('fs')
 	global.__root = __dirname
 	global.util = require('./lib/util')
+
 	showAppInfo()
 
 	await require('./db')()
@@ -15,6 +16,7 @@
 
 	// await require('./wss-api/wss-api')(httpServer)
 
+	
 
 	setTimeout(() => {
 		eventLog(`Application was started properly :-)`.yellow)
