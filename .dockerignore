@@ -1,14 +1,5 @@
 # docker ignore
 
-CHANGELOG.md
-README.md
-node_modules
-
-**!!__*
-
-* copy*
-
-.dockerignore
 docker-compose.yml
 Dockerfile
 .dockerignore
@@ -19,3 +10,6 @@ README.md
 .git
 .github/
 _scraper/
+**!!__*
+
+* copy*
