@@ -24,11 +24,40 @@ module.exports = (dbModel, sessionDoc, req) =>
     }
   })
 
+const imageBaseUrl = 'https://miajupiter.com/media/tour-img01/'
+
 function getOne(dbModel, sessionDoc, req) {
   return new Promise((resolve, reject) => {
     dbModel.tours
       .findOne({ _id: req.params.param1 })
-      .then(resolve)
+      .then(doc => {
+        var obj =doc.toJSON()
+        obj.id = doc._id.toString()
+        obj.featuredImage = ''
+        obj.price = 0
+        obj.images = []
+        if (doc.images.length > 0) {
+          obj.featuredImage = {
+            src: imageBaseUrl + doc.images[0].image || '',
+            width: 900,
+            height: 900,
+          }
+          doc.images.forEach(e => {
+            obj.images.push({
+              src: imageBaseUrl + e.image,
+              width: 900,
+              height: 900,
+            })
+          })
+        }
+        if (doc.priceTable && doc.priceTable.length > 0) {
+          //qwerty  tarih kontrolu ekle, en yakinlarda en dusukten belki
+          obj.price = doc.priceTable[0].price
+        }
+
+        obj.desc = (obj.description || '').substring(0, 140) + '...'
+        resolve(obj)
+      })
       .catch(reject)
   })
 }
@@ -36,7 +65,8 @@ function getOne(dbModel, sessionDoc, req) {
 function getList(dbModel, sessionDoc, req) {
   return new Promise((resolve, reject) => {
     let options = {
-      page: req.query.page || (req.query.pageIndex || 0) + 1,
+      page: req.query.page || 1,
+      limit: req.query.pageSize || 10,
       select: '_id title description duration places images priceTable currency',
 
       // populate: [
@@ -47,8 +77,8 @@ function getList(dbModel, sessionDoc, req) {
       // ],
     }
 
-    if (req.query.pageSize || req.query.limit)
-      options.limit = req.query.pageSize || req.query.limit
+    // if (req.query.pageSize || req.query.limit)
+    //   options.limit = req.query.pageSize || req.query.limit
 
     let filter = {}
     if ((req.query.my || '').toString() == 'true') {
@@ -58,12 +88,6 @@ function getList(dbModel, sessionDoc, req) {
       filter.passive = req.query.passive
     }
 
-    // if ((req.query.status || '') != '') {
-    //   filter.status = req.query.status
-    // }
-    console.log(`options:`, options)
-    const imageBaseUrl = 'https://miajupiter.com/media/tour-img01/'
-    // const imageBaseUrl = '/img/'
     dbModel.tours.paginate(filter, options).then(result => {
       var list = []
       result.docs.forEach(doc => {
@@ -80,7 +104,8 @@ function getList(dbModel, sessionDoc, req) {
           }
           doc.images.forEach(e => {
             obj.images.push({
-              src: imageBaseUrl + e.image,
+              // src: imageBaseUrl + e.image,
+              src: imageBaseUrl + e.thumbnail,
               width: 500,
               height: 500,
             })
@@ -89,10 +114,9 @@ function getList(dbModel, sessionDoc, req) {
         if (doc.priceTable && doc.priceTable.length > 0) {
           //qwerty  tarih kontrolu ekle, en yakinlarda en dusukten belki
           obj.price = doc.priceTable[0].price
-          console.log('doc.priceTable[0].price:',doc.priceTable[0].price)
         }
 
-        obj.desc=(obj.description || '').substring(0,140) + '...'
+        obj.desc = (obj.description || '').substring(0, 140) + '...'
         list.push(obj)
       })
 
@@ -101,7 +125,7 @@ function getList(dbModel, sessionDoc, req) {
       // if (result.docs.length > 0) {
       //   console.log(result.docs[0])
       // }
-      
+
       resolve(result)
     }).catch(reject)
   })
