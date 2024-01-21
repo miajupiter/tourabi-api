@@ -31,7 +31,7 @@ function getOne(dbModel, sessionDoc, req) {
     dbModel.tours
       .findOne({ _id: req.params.param1 })
       .then(doc => {
-        var obj =doc.toJSON()
+        var obj = doc.toJSON()
         obj.id = doc._id.toString()
         obj.featuredImage = ''
         obj.price = 0
@@ -42,6 +42,7 @@ function getOne(dbModel, sessionDoc, req) {
             width: 900,
             height: 900,
           }
+
           doc.images.forEach(e => {
             obj.images.push({
               src: imageBaseUrl + e.image,
@@ -102,7 +103,8 @@ function getList(dbModel, sessionDoc, req) {
             width: 500,
             height: 500,
           }
-          doc.images.forEach(e => {
+          const list3 = doc.images.slice(0, 3)
+          list3.forEach(e => {
             obj.images.push({
               // src: imageBaseUrl + e.image,
               src: imageBaseUrl + e.thumbnail,
