@@ -137,7 +137,7 @@ async function passport(req) {
   return new Promise(async (resolve, reject) => {
     try {
       const token = req.headers.token || req.body.token || req.query.token
-      if (!token) return reject('token required')
+      if (!token) return resolve(null)
 
       // const decoded = await auth.verify(token)
       // const sessionDoc = await db.sessions.findOne({ _id: decoded.sessionId, closed: false })
@@ -148,8 +148,10 @@ async function passport(req) {
         // sessionDoc.lastIP = req.IP
         // sessionDoc.save().then(resolve).catch(reject)
         resolve(sessionDoc)
-      } else
-        reject('session not found or closed')
+      } else{
+        resolve(null)
+      }
+
     } catch (err) {
       reject(err)
     }

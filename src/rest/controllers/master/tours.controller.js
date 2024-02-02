@@ -1,28 +1,29 @@
-module.exports = (dbModel, sessionDoc, req) =>
-  new Promise(async (resolve, reject) => {
-    switch (req.method.toUpperCase()) {
-      case 'GET':
-        if (req.params.param1 != undefined) {
-          getOne(dbModel, sessionDoc, req).then(resolve).catch(reject)
-        } else {
-          getList(dbModel, sessionDoc, req).then(resolve).catch(reject)
-        }
-        break
-      case 'POST':
-        post(dbModel, sessionDoc, req).then(resolve).catch(reject)
+module.exports = (dbModel, sessionDoc, req) => new Promise(async (resolve, reject) => {
+  if(!sessionDoc && ['POST','PUT','DELETE'].includes(req.method))
+    return restError.auth(req,reject)
+  switch (req.method) {
+    case 'GET':
+      if (req.params.param1 != undefined) {
+        getOne(dbModel, sessionDoc, req).then(resolve).catch(reject)
+      } else {
+        getList(dbModel, sessionDoc, req).then(resolve).catch(reject)
+      }
+      break
+    case 'POST':
+      post(dbModel, sessionDoc, req).then(resolve).catch(reject)
 
-        break
-      case 'PUT':
-        put(dbModel, sessionDoc, req).then(resolve).catch(reject)
-        break
-      case 'DELETE':
-        deleteItem(dbModel, sessionDoc, req).then(resolve).catch(reject)
-        break
-      default:
-        restError.method(req, reject)
-        break
-    }
-  })
+      break
+    case 'PUT':
+      put(dbModel, sessionDoc, req).then(resolve).catch(reject)
+      break
+    case 'DELETE':
+      deleteItem(dbModel, sessionDoc, req).then(resolve).catch(reject)
+      break
+    default:
+      restError.method(req, reject)
+      break
+  }
+})
 
 const imageBaseUrl = 'https://miajupiter.com/media/tour-img01/'
 
