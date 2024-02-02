@@ -5,19 +5,19 @@ module.exports = (req) =>
 	new Promise(async (resolve, reject) => {
 		if (req.method == 'POST') {
 			let data = req.body
-			if (!data.user) return reject(`data does not have 'user' object`)
-
-			const email = data.user.email
+			if (!data.email) return reject(`data does not have 'email' object`)
+			console.log(`data:`,data)
+			const email = data.email
 			let memberDoc = await db.members.findOne({ username: email })
 			if (!memberDoc) {
 				memberDoc = new db.members({
 					username: email,
 					password: '',
-					name: data.user.name,
-					credentialType: data.account.provider,
+					name: data.name,
+					credentialType: data.provider,
 					role: 'user',
 					passive: false,
-					image: data.user.image
+					image: data.image
 				})
 				memberDoc.save()
 					.then(newMemberDoc => {

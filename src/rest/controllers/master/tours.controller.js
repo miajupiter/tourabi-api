@@ -83,7 +83,7 @@ function getList(dbModel, sessionDoc, req) {
 
     let filter = {}
     if ((req.query.my || '').toString() == 'true') {
-      filter.owner = sessionDoc.member
+      filter.owner = sessionDoc.userId
     }
     if ((req.query.passive || '') != '') {
       filter.passive = req.query.passive
@@ -137,7 +137,7 @@ function post(dbModel, sessionDoc, req) {
   return new Promise((resolve, reject) => {
     let data = req.body || {}
     data._id = undefined
-    data.owner = sessionDoc.member
+    data.owner = sessionDoc.userId
     let newDoc = new dbModel.tours(data)
 
     if (!epValidateSync(newDoc, reject)) return
@@ -152,7 +152,7 @@ function put(dbModel, sessionDoc, req) {
     delete data._id
 
     dbModel.tours
-      .findOne({ _id: req.params.param1, owner: sessionDoc.member })
+      .findOne({ _id: req.params.param1, owner: sessionDoc.userId })
       .then((doc) => {
         if (dbNull(doc, reject)) {
           let newDoc = Object.assign(doc, data)
@@ -181,7 +181,7 @@ function deleteItem(dbModel, sessionDoc, req) {
     let data = req.body || {}
     data._id = req.params.param1
 
-    dbModel.tours.removeOne(sessionDoc, { _id: data._id, owner: sessionDoc.member }).then(resolve).catch(err => {
+    dbModel.tours.removeOne(sessionDoc, { _id: data._id, owner: sessionDoc.userId }).then(resolve).catch(err => {
       console.log(err)
       reject(err)
     })

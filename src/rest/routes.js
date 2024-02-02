@@ -23,6 +23,11 @@ module.exports = (app) => {
     res.status(200).json({ success: true, data: apiWelcomeMessage })
   })
 
+  app.all('/api/v1/*', function (req, res,next) {
+    console.log(req.method, `req.params:`,req.params, '\tbody:',req.body,'\tquery:',req.query,'\theaders.token:',req.headers.token)
+    next()
+  })
+
   authControllers(app, '/api/v1/auth/:func/:param1/:param2/:param3')
   // sessionControllers(app, '/api/v1/session/:func/:param1/:param2/:param3')
   // repoControllers(app, '/api/v1/db/:func/:param1/:param2/:param3')
@@ -134,13 +139,15 @@ async function passport(req) {
       const token = req.headers.token || req.body.token || req.query.token
       if (!token) return reject('token required')
 
-      const decoded = await auth.verify(token)
-      const sessionDoc = await db.sessions.findOne({ _id: decoded.sessionId, closed: false })
+      // const decoded = await auth.verify(token)
+      // const sessionDoc = await db.sessions.findOne({ _id: decoded.sessionId, closed: false })
+      const sessionDoc = await db.usersSessions.findOne({ sessionToken: token })
 
       if (sessionDoc) {
-        sessionDoc.lastOnline = new Date()
-        sessionDoc.lastIP = req.IP
-        sessionDoc.save().then(resolve).catch(reject)
+        // sessionDoc.lastOnline = new Date()
+        // sessionDoc.lastIP = req.IP
+        // sessionDoc.save().then(resolve).catch(reject)
+        resolve(sessionDoc)
       } else
         reject('session not found or closed')
     } catch (err) {

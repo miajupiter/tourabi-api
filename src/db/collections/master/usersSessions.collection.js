@@ -3,17 +3,14 @@ const collectionName = path.basename(__filename, '.collection.js')
 module.exports = function (dbModel) {
   let schema = mongoose.Schema(
     {
+      sessionToken: { type: String, index:true },
       userId: { type: ObjectId, ref: 'users', index: true },
-      title: { type: String, default: '' },
-      body: { type: String, default: '' },
-      image: { type: String, default: '' },
-      read: { type: Boolean, default: false, index: true },
-      createdDate: { type: Date, default: Date.now },
+      expires:{type:Date}
     },
     { versionKey: false },
-    // { capped: true, size: 5242880, max: 5000 }
+    // { capped : true, size : 5242880, max :
+    //   5000 } 
   )
-
 
   schema.pre('save', (next) => next())
   schema.pre('remove', (next) => next())
