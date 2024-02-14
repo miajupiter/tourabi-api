@@ -2,7 +2,7 @@ module.exports = (dbModel, sessionDoc, req) =>
 	new Promise(async (resolve, reject) => {
 		if (req.method === 'GET') {
       sessionDoc.populate({
-        path:'member',
+        path:'userId',
         select:'-password'})
       .then(resolve)
       .catch(reject)

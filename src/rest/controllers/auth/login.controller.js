@@ -1,38 +1,53 @@
-const { saveSession } = require('./helper')
 
+
+const { saveSession } = require('./helper')
 module.exports = (req) =>
 	new Promise((resolve, reject) => {
-		if (req.method == 'POST') {
-			let username = req.body.username || req.query.username || req.headers.username || ''
-			let password = req.body.password || req.query.password || req.headers.password || ''
-			let deviceId = req.body.deviceId || req.query.deviceId || req.headers.deviceId || ''
-			if (username.trim() == '') return reject('username required')
-			if (!username.includes('@') && !username.startsWith('+') && !isNaN(username)) {
-				username = `+${username}`
-			}
-			if (password == '') return reject('password required')
+		if (req.method != 'POST')
+			return restError.method(req, reject)
+		// console.log('req.body',req.body)
+		// let username = req.getValue('username')
+		let email = req.getValue('email')
+		let password = req.getValue('password')
+		let deviceId = req.getValue('deviceId')
 
-			login(username, password)
-				.then((userDoc) => saveSession(userDoc, req).then(resolve).catch(reject))
-				.catch(reject)
-		} else {
-			restError.method(req, reject)
-		}
+		// if (!(username || email || phone))
+		// return reject(`One of email, phone, username required.`)
+
+		if (!(email)) return reject(`email required`)
+		if (!password) return reject('password required')
+
+		login(email, password,deviceId)
+			.then((userDoc) => {
+				saveSession(userDoc, req).then(resp=>{
+					console.log('resp:',resp)
+					resolve(resp)
+				}).catch(err=>{
+					console.log('session err:',err)
+					reject(err)
+				})
+			})
+			.catch(err=>{
+				console.log('login err:',err)
+				reject(err)
+			})
+
 	})
 
 
-function login(username, password) {
-	return new Promise(async (resolve, reject) => {
-		if (password) {
-			const doc = await db.members.findOne({ username: username, password: password })
-			if (doc) {
-				if (!doc.passive)
+function login(email, password, deviceId) {
+	return new Promise((resolve, reject) => {
+		db.users
+			.findOne({ email: email, password: password })
+			.then((doc) => {
+				if (doc == null) {
+					reject(`login failed`)
+				} else if (doc.passive) {
+					reject(`user is not active`)
+				} else {
 					resolve(doc)
-				else reject(`user is not active`)
-			} else reject('login failed')
-		} else reject('password is required')
+				}
+			})
+			.catch(reject)
 	})
 }
-
-
-

@@ -26,7 +26,7 @@ exports.sendToTrash = (dbModel, collectionName, session, filter) =>
                   .then((mdl) => {
                     let k = keys[index]
                     let relationFilter
-                    let errMessage = `Bu kayit <b>${k}</b> tablosuna baglidir.`
+                    let errMessage = `this record linked to '${k}' collection`
                     if (Array.isArray(relations[k])) {
                       if (relations[k].length > 0)
                         if (typeof relations[k][0] == 'string') {
@@ -55,7 +55,7 @@ exports.sendToTrash = (dbModel, collectionName, session, filter) =>
                     mdl[k]
                       .countDocuments(relationFilter)
                       .then((c) => {
-                        if (c > 0) errorList.push(`${errMessage} ${c} Kayıt`)
+                        if (c > 0) errorList.push(`${errMessage} ${c} Records`)
                         index++
                         setTimeout(
                           () => kontrolEt().then(resolve).catch(reject),
@@ -72,7 +72,7 @@ exports.sendToTrash = (dbModel, collectionName, session, filter) =>
                 if (errorList.length == 0) {
                   resolve()
                 } else {
-                  errorList.unshift('<b>Bağlı kayıt(lar) var. Silemezsiniz!</b>')
+                  errorList.unshift(`the record is linked to other collections, you can't delete it`)
                   reject({
                     name: 'RELATION_ERROR',
                     message: errorList.join('\n'),
@@ -80,7 +80,7 @@ exports.sendToTrash = (dbModel, collectionName, session, filter) =>
                 }
               })
               .catch((err) => {
-                errorList.unshift('<b>Bağlı kayıt(lar) var. Silemezsiniz!</b>')
+                errorList.unshift(`the record is linked to other collections, you can't delete it`)
                 if (err) errorList.push(err.message)
                 reject({ name: 'RELATION_ERROR', message: errorList.join('\n') })
               })
@@ -89,8 +89,8 @@ exports.sendToTrash = (dbModel, collectionName, session, filter) =>
               collectionName: collectionName,
               documentId: doc._id,
               document: doc,
-              deletedBy: session.username,
-              deletedById: session.member,
+              deletedBy: session.userId && session.userId.email || '',
+              deletedById: session.userId && session.userId._id || '',
             })
             if (!epValidateSync(rubbishDoc, reject)) return
             rubbishDoc

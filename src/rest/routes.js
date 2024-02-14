@@ -4,8 +4,11 @@ const spamCheck = require('../lib/spam-detector')
 
 module.exports = (app) => {
   app.all('/*', (req, res, next) => {
-    req.IP =
-      req.headers['x-forwarded-for'] || req.connection.remoteAddress || ''
+    req.IP = req.headers['x-forwarded-for'] || req.connection.remoteAddress || ''
+    req.getValue = (key) => {
+      return (req.headers[key] || req.body[key] || req.query[key] || '').trim()
+    }
+
 
     next()
   })
@@ -23,15 +26,17 @@ module.exports = (app) => {
     res.status(200).json({ success: true, data: apiWelcomeMessage })
   })
 
-  app.all('/api/v1/*', function (req, res,next) {
-    console.log(req.method, `req.params:`,req.params, '\tbody:',req.body,'\tquery:',req.query,'\theaders.token:',req.headers.token)
+  app.all('/api/v1/*', function (req, res, next) {
+    console.log(req.method, `req.params:`, req.params, '\tbody:', req.body, '\tquery:', req.query, '\theaders.token:', req.headers.token)
     next()
   })
 
   authControllers(app, '/api/v1/auth/:func/:param1/:param2/:param3')
   // sessionControllers(app, '/api/v1/session/:func/:param1/:param2/:param3')
   // repoControllers(app, '/api/v1/db/:func/:param1/:param2/:param3')
+  adminControllers(app, '/api/v1/admin/:func/:param1/:param2/:param3')
   masterControllers(app, '/api/v1/:func/:param1/:param2/:param3')
+
 
   app.use((req, res, next) => {
     res.status(404).json({ success: false, error: 'Not found' })
@@ -66,6 +71,32 @@ function authControllers(app, route) {
   })
 }
 
+async function adminControllers(app, route) {
+  setRoutes(app, route, (req, res, next) => {
+    if (restControllers.admin[req.params.func]) {
+      passport(req)
+        .then((sessionDoc) => {
+          if (['manager', 'admin', 'sysadmin'].includes(sessionDoc.userId.role)) {
+            restControllers.admin[req.params.func](db, sessionDoc, req)
+              .then((data) => {
+                if (data == undefined) res.json({ success: true })
+                else if (data == null) res.json({ success: true })
+                else {
+                  res.status(200).json({ success: true, data: data })
+                }
+              })
+              .catch(next)
+          } else {
+            res.status(401).json({ success: false, error: `permission denied` })
+          }
+        })
+        .catch((err) => {
+          res.status(401).json({ success: false, error: err.message || err || 'error' })
+        })
+    } else next()
+  })
+}
+
 
 async function masterControllers(app, route) {
   setRoutes(app, route, (req, res, next) => {
@@ -83,7 +114,7 @@ async function masterControllers(app, route) {
             .catch(next)
         })
         .catch((err) => {
-          res.status(401).json({ success: false, error: err })
+          res.status(401).json({ success: false, error: err.message || err || 'error' })
         })
     } else next()
   })
@@ -135,26 +166,22 @@ function setRoutes(app, route, cb1, cb2) {
 
 async function passport(req) {
   return new Promise(async (resolve, reject) => {
-    try {
-      const token = req.headers.token || req.body.token || req.query.token
-      if (!token) return resolve(null)
-
-      // const decoded = await auth.verify(token)
-      // const sessionDoc = await db.sessions.findOne({ _id: decoded.sessionId, closed: false })
-      const sessionDoc = await db.usersSessions.findOne({ sessionToken: token })
-
-      if (sessionDoc) {
-        // sessionDoc.lastOnline = new Date()
-        // sessionDoc.lastIP = req.IP
-        // sessionDoc.save().then(resolve).catch(reject)
-        resolve(sessionDoc)
-      } else{
-        resolve(null)
-      }
-
-    } catch (err) {
-      reject(err)
-    }
+    // try {
+    const token = req.headers.token || req.body.token || req.query.token
+    if (!token) return resolve(null)
+    auth.verify(token)
+      .then(decoded => {
+        console.log(`decoded:`, decoded)
+        db.sessions.findOne({ sessionToken: decoded.sessionToken })
+          .populate([{
+            path: 'userId',
+            select: '_id name email role'
+          }])
+          .then(resolve).catch(reject)
+      }).catch(reject)
+    // } catch (err) {
+    //   reject(err)
+    // }
   })
 }
 

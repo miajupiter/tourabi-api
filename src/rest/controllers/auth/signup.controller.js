@@ -3,65 +3,61 @@ const sender = require('../../../lib/sender')
 module.exports = (req) =>
 	new Promise(async (resolve, reject) => {
 		if (req.method == 'POST') {
-			let username = req.body.username || req.query.username || ''
-      let password = req.body.password || req.query.password || ''
-      let deviceId = req.body.deviceId || req.query.deviceId || ''
-
-			if (username.trim() == '') return reject('username required')
-      if (!username.includes('@') && !username.startsWith('+') && !isNaN(username)){
-        username = `+${username}`
-      }
-
-			if (password == '')	return reject('password required')
+			let data=req.body
+			delete data._id
 			
-			db.members
-				.findOne({ username: username })
-				.then((memberDoc) => {
-					if (!memberDoc) {
-						db.authCodes
-							.updateMany(
-								{ username: username, verified: false, passive: false },
-								{ $set: { passive: true } },
-								{ multi: true }
-							)
-							.then(() => {
-								let newAuthDoc = new db.authCodes({
-									username: username,
-									password: password,
-									authCode: '893050', //qwerty util.randomNumber(120000, 998000).toString(),
-									authCodeExpire: new Date(
-										new Date().setSeconds(
-											new Date().getSeconds() +
-												Number(process.env.AUTHCODE_EXPIRE || 180)
-										)
-									),
-									deviceId: deviceId,
-									verified: false, 
-									passive: false,
-								})
-								newAuthDoc
-									.save()
-									.then((newAuthDoc2) => {
-										if (util.isValidTelephone(newAuthDoc2.username)) {
-											sender
-												.sendAuthSms(newAuthDoc2.username, newAuthDoc2.authCode)
-												.then(()=>resolve(`username:${newAuthDoc2.username} authCode:${newAuthDoc2.authCode} /auth/verify icin kullanilacak.`))
-												.catch(reject)
-										} else if (util.isValidEmail(newAuthDoc2.username)) {
-											sender
-												.sendAuthEmail(newAuthDoc2.username, newAuthDoc2.authCode)
-												.then(()=>resolve(`username:${newAuthDoc2.username} authCode:${newAuthDoc2.authCode} /auth/verify icin kullanilacak.`))
-												.catch(reject)
-										} else {
-											
-											resolve(`username:${newAuthDoc2.username} authCode:${newAuthDoc2.authCode} /auth/verify icin kullanilacak.`)
-										}
-									})
+			if (!data.email) return reject('email required')
+			if (!data.password ) return reject('password required')
+
+			if(!data.address){
+				data.address={
+					region:data.address_region || '',
+					cityName:data.address_cityName || '',
+					citySubdivisionName:data.address_citySubdivisionName || '',
+					district:data.address_district || '',
+					streetName:data.address_streetName || '',
+					buildingNumber:data.address_buildingNumber || '',
+					buildingName:data.address_buildingName || '',
+					blockName :data.address_blockName || '',
+					room:data.address_room || '',
+					postalZone:data.address_postalZone || '',
+					country:{
+						identificationCode:data.address_country_identificationCode || '',
+						name:data.address_country_name || '',
+					}
+				}
+			}
+			db.users
+				.findOne({ email: data.email })
+				.then(async (userDoc) => {
+					if (!userDoc) {
+						await db.authCodes.deleteMany({ email: data.email, deviceId: data.deviceId, verified: false })
+
+						const newAuthDoc = new db.authCodes({
+							email: data.email,
+							deviceId: data.deviceId,
+							// authCode: '893050', //qwerty util.randomNumber(120000, 998000).toString(),
+							authCode: util.randomNumber(120000, 998000).toString(),
+							authCodeExpire: new Date(
+								new Date().setSeconds(
+									new Date().getSeconds() +
+									Number(process.env.AUTHCODE_EXPIRE || 1800)
+								)
+							),
+							verified: false,
+							userInfo:data
+						})
+						newAuthDoc
+							.save()
+							.then((newAuthDoc2) => {
+								sender
+									.sendAuthEmail(newAuthDoc2.email, newAuthDoc2.authCode)
+									.then(() => resolve(`email:${newAuthDoc2.email} authCode:${newAuthDoc2.authCode} /auth/verify icin kullanilacak.`))
 									.catch(reject)
 							})
 							.catch(reject)
 					} else {
-						reject('User already exists')
+						reject('user already exists')
 					}
 				})
 				.catch(reject)

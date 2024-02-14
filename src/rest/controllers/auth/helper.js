@@ -1,49 +1,36 @@
-const { permissionType } = require('../../../db/helpers/db-types')
-const auth=require('../../../lib/auth')
-exports.saveSession=async function(userDoc, req, socialCredentials={}) {
-	let deviceId = req.body.deviceId || req.query.deviceId || req.headers.deviceId || ''
-	let oldSessions = []
+const auth = require('../../../lib/auth')
+const { v4 } = require('uuid')
+exports.saveSession = async function (userDoc, req) {
+	let deviceId = req.getValue('deviceId')
 	try {
-		oldSessions = await db.sessions
-			.find({ member: userDoc._id })
-			.sort({ _id: -1 })
-			.limit(1)
-
-		db.sessions.updateMany(
-			{ member: userDoc._id, username:userDoc.username, deviceId: deviceId, closed: false },
-			{ $set: { closed: true } },
+		await db.sessions.deleteMany(
+			{
+				$or: [
+					{ userId: userDoc._id, deviceId: deviceId },
+					{ expires: { $gt: new Date() } }
+				]
+			},
 			{ multi: true }
 		)
-	} catch {}
+	} catch { }
 
 	return new Promise(async (resolve, reject) => {
 		// let oldDbId = null
 		let sessionDoc = new db.sessions({
-			member: userDoc._id,
-			username: userDoc.username,
-			role: userDoc.role,
-			deviceId: deviceId,
-			IP: req.IP || '',
-			lastIP: req.IP || '',
-			closed: false,
-			language: 'tr',
-			requestHeaders: req.headers,
-      socialCredentials:socialCredentials,
-			permissions: util.clone(permissionType),
+			userId: userDoc._id,
+			sessionToken: v4(),
+			expires: new Date(new Date().setSeconds(new Date().getSeconds() + Number(process.env.JWT_TOKEN_EXPIRES_IN)))
 		})
-		if (oldSessions.length > 0) {
-			sessionDoc.language = oldSessions[0].language
-		}
 		
-
 		sessionDoc
 			.save()
 			.then((newDoc) => {
 				let obj = {
-					sessionId: newDoc._id.toString(),
+					user:userDoc.toJSON(),
+					token: auth.sign({sessionToken: newDoc.sessionToken}),
 				}
-				console.log(`obj:`,obj)
-				resolve(auth.sign(obj))
+				delete obj.user.password
+				resolve(obj)
 			})
 			.catch(reject)
 	})

@@ -9,16 +9,16 @@ module.exports = (dbModel, sessionDoc, req) => new Promise(async (resolve, rejec
         getList(dbModel, sessionDoc, req).then(resolve).catch(reject)
       }
       break
-    // case 'POST':
-    //   post(dbModel, sessionDoc, req).then(resolve).catch(reject)
+    case 'POST':
+      post(dbModel, sessionDoc, req).then(resolve).catch(reject)
 
-    //   break
-    // case 'PUT':
-    //   put(dbModel, sessionDoc, req).then(resolve).catch(reject)
-    //   break
-    // case 'DELETE':
-    //   deleteItem(dbModel, sessionDoc, req).then(resolve).catch(reject)
-    //   break
+      break
+    case 'PUT':
+      put(dbModel, sessionDoc, req).then(resolve).catch(reject)
+      break
+    case 'DELETE':
+      deleteItem(dbModel, sessionDoc, req).then(resolve).catch(reject)
+      break
     default:
       restError.method(req, reject)
       break

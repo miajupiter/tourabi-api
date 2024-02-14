@@ -4,8 +4,9 @@ module.exports = function (dbModel) {
   let schema = mongoose.Schema(
     {
       sessionToken: { type: String, index:true },
+      deviceId: { type: String,default:'', index:true },
       userId: { type: ObjectId, ref: 'users', index: true },
-      expires:{type:Date}
+      expires:{type:Date, }
     },
     { versionKey: false },
     // { capped : true, size : 5242880, max :
