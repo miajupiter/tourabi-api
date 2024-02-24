@@ -7,7 +7,7 @@ module.exports = function (dbModel) {
 			country: { type: String, default: '',index:true },
 			images: [{
 				image: { type: String, default: '' },
-				thumnail: { type: String, default: '' },
+				thumbnail: { type: String, default: '' },
 			}],
 			passive: { type: Boolean, default: false, index: true },
 			createdDate: { type: Date, default: Date.now },

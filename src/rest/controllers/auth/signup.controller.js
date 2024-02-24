@@ -32,7 +32,7 @@ module.exports = (req) =>
 				.then(async (userDoc) => {
 					if (!userDoc) {
 						await db.authCodes.deleteMany({ email: data.email, deviceId: data.deviceId, verified: false })
-
+						data.name=(data.firstName || '') + ' ' + (data.lastName || '')
 						const newAuthDoc = new db.authCodes({
 							email: data.email,
 							deviceId: data.deviceId,

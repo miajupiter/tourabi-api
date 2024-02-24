@@ -52,8 +52,18 @@ module.exports = function (dbModel) {
         phoneVerified:{ type: Boolean, default: false }
       },
       bio: { type: String, default: '' },
+      discount:{
+        rate:{type:Number, required:true, default:5},
+        additionalAmount:{type:Number, required:true, default:0}
+      },
+      balance:{type:Number,default:0},
+      currency:{type:String,default:'USD'},
       emailVerified: { type: Date, default: null},
-      createdDate: { type: Date, default: Date.now },
+      status: { type: String, required:true, default:'pending', enum:['pending','approved','declined','error'], index:true},
+      reviewMessage:{ type: String, default:'' },
+      reviewedBy: { type: ObjectId, ref: 'users', index: true},
+      reviewedDate: { type: Date, default: Date.now },
+      createdDate: { type: Date, default: Date.now, index: true },
       modifiedDate: { type: Date, default: Date.now }
     },
     { versionKey: false }

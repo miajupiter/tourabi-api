@@ -25,7 +25,7 @@ module.exports = (dbModel, sessionDoc, req) => new Promise(async (resolve, rejec
   }
 })
 
-const imageBaseUrl = 'https://miajupiter.com/media/tour-img01/'
+const imageBaseUrl = 'https://tourabi.s3.eu-central-1.amazonaws.com/tour-images001/'
 
 function getOne(dbModel, sessionDoc, req) {
   return new Promise((resolve, reject) => {
@@ -39,14 +39,14 @@ function getOne(dbModel, sessionDoc, req) {
         obj.images = []
         if (doc.images.length > 0) {
           obj.featuredImage = {
-            src: imageBaseUrl + doc.images[0].image || '',
+            src: doc.images[0].image.startsWith('http')?doc.images[0].image: imageBaseUrl + doc.images[0].image || '',
             width: 900,
             height: 900,
           }
 
           doc.images.forEach(e => {
             obj.images.push({
-              src: imageBaseUrl + e.image,
+              src: e.image.startsWith('http')?e.image:imageBaseUrl + e.image || '',
               width: 900,
               height: 900,
             })
@@ -69,7 +69,7 @@ function getList(dbModel, sessionDoc, req) {
     let options = {
       page: req.query.page || 1,
       limit: req.query.pageSize || 10,
-      select: '_id title description duration places images priceTable currency',
+      select: '_id title description duration places images tempImages priceTable currency',
 
       // populate: [
       //   {
@@ -82,12 +82,11 @@ function getList(dbModel, sessionDoc, req) {
     // if (req.query.pageSize || req.query.limit)
     //   options.limit = req.query.pageSize || req.query.limit
 
-    let filter = {}
+    let filter = {
+      passive:false
+    }
     if ((req.query.my || '').toString() == 'true') {
       filter.owner = sessionDoc.userId
-    }
-    if ((req.query.passive || '') != '') {
-      filter.passive = req.query.passive
     }
 
     dbModel.tours.paginate(filter, options).then(result => {
@@ -100,7 +99,7 @@ function getList(dbModel, sessionDoc, req) {
         obj.images = []
         if (doc.images.length > 0) {
           obj.featuredImage = {
-            src: imageBaseUrl + doc.images[0].image || '',
+            src: doc.images[0].image.startsWith('http')?doc.images[0].image: imageBaseUrl + doc.images[0].image || '',
             width: 500,
             height: 500,
           }
@@ -108,7 +107,7 @@ function getList(dbModel, sessionDoc, req) {
           list3.forEach(e => {
             obj.images.push({
               // src: imageBaseUrl + e.image,
-              src: imageBaseUrl + e.thumbnail,
+              src: e.thumbnail.startsWith('http')?e.thumbnail: imageBaseUrl + e.thumbnail,
               width: 500,
               height: 500,
             })
@@ -134,57 +133,57 @@ function getList(dbModel, sessionDoc, req) {
   })
 }
 
-function post(dbModel, sessionDoc, req) {
-  return new Promise((resolve, reject) => {
-    let data = req.body || {}
-    data._id = undefined
-    data.owner = sessionDoc.userId
-    let newDoc = new dbModel.tours(data)
+// function post(dbModel, sessionDoc, req) {
+//   return new Promise((resolve, reject) => {
+//     let data = req.body || {}
+//     data._id = undefined
+//     data.owner = sessionDoc.userId
+//     let newDoc = new dbModel.tours(data)
 
-    if (!epValidateSync(newDoc, reject)) return
-    newDoc.save().then(resolve).catch(reject)
-  })
-}
+//     if (!epValidateSync(newDoc, reject)) return
+//     newDoc.save().then(resolve).catch(reject)
+//   })
+// }
 
-function put(dbModel, sessionDoc, req) {
-  return new Promise((resolve, reject) => {
-    if (req.params.param1 == undefined) return restError.param1(req, reject)
-    let data = req.body || {}
-    delete data._id
+// function put(dbModel, sessionDoc, req) {
+//   return new Promise((resolve, reject) => {
+//     if (req.params.param1 == undefined) return restError.param1(req, reject)
+//     let data = req.body || {}
+//     delete data._id
 
-    dbModel.tours
-      .findOne({ _id: req.params.param1, owner: sessionDoc.userId })
-      .then((doc) => {
-        if (dbNull(doc, reject)) {
-          let newDoc = Object.assign(doc, data)
-          if (!epValidateSync(newDoc, (err) => {
-            reject(err)
-          })) return
-          newDoc.save().then(resp => {
-            console.log('resp:', resp)
-            resolve(resp)
-          }).catch(err => {
-            console.log(err)
-            reject(err)
-          })
-        }
-      })
-      .catch(err => {
-        console.log(err)
-        reject(err)
-      })
-  })
-}
+//     dbModel.tours
+//       .findOne({ _id: req.params.param1, owner: sessionDoc.userId })
+//       .then((doc) => {
+//         if (dbNull(doc, reject)) {
+//           let newDoc = Object.assign(doc, data)
+//           if (!epValidateSync(newDoc, (err) => {
+//             reject(err)
+//           })) return
+//           newDoc.save().then(resp => {
+//             console.log('resp:', resp)
+//             resolve(resp)
+//           }).catch(err => {
+//             console.log(err)
+//             reject(err)
+//           })
+//         }
+//       })
+//       .catch(err => {
+//         console.log(err)
+//         reject(err)
+//       })
+//   })
+// }
 
-function deleteItem(dbModel, sessionDoc, req) {
-  return new Promise((resolve, reject) => {
-    if (req.params.param1 == undefined) return restError.param1(req, next)
-    let data = req.body || {}
-    data._id = req.params.param1
+// function deleteItem(dbModel, sessionDoc, req) {
+//   return new Promise((resolve, reject) => {
+//     if (req.params.param1 == undefined) return restError.param1(req, next)
+//     let data = req.body || {}
+//     data._id = req.params.param1
 
-    dbModel.tours.removeOne(sessionDoc, { _id: data._id, owner: sessionDoc.userId }).then(resolve).catch(err => {
-      console.log(err)
-      reject(err)
-    })
-  })
-}
+//     dbModel.tours.removeOne(sessionDoc, { _id: data._id, owner: sessionDoc.userId }).then(resolve).catch(err => {
+//       console.log(err)
+//       reject(err)
+//     })
+//   })
+// }

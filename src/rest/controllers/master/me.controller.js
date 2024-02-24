@@ -1,4 +1,5 @@
 module.exports = (dbModel, sessionDoc, req) => new Promise((resolve, reject) => {
+	console.log(`buraya geldi sessionDoc:`, sessionDoc)
 	if(!sessionDoc)
 		return restError.auth(req,reject)
 
