@@ -27,7 +27,7 @@ module.exports = (dbModel, sessionDoc, req) => new Promise(async (resolve, rejec
 
 function getOne(dbModel, sessionDoc, req) {
   return new Promise((resolve, reject) => {
-    dbModel.destinations
+    dbModel.accommodations
       .findOne({ _id: req.params.param1 })
       .then(doc => {
         if (dbNull(doc, reject)) {
@@ -44,6 +44,7 @@ function getList(dbModel, sessionDoc, req) {
       page: req.query.page || 1,
       limit: req.query.pageSize || 10,
       select: '_id title country images passive',
+
     }
 
     let filter = {}
@@ -52,9 +53,9 @@ function getList(dbModel, sessionDoc, req) {
       filter.passive = req.query.passive
     }
 
-    dbModel.destinations.paginate(filter, options)
+    dbModel.accommodations.paginate(filter, options)
       .then(result => {
-        result.docs.forEach(doc=>{
+        result.docs.forEach(doc => {
           doc.images=(doc.images || []).slice(0,3)
         })
         resolve(result)
@@ -66,7 +67,7 @@ function post(dbModel, sessionDoc, req) {
   return new Promise((resolve, reject) => {
     let data = req.body || {}
     data._id = undefined
-    let newDoc = new dbModel.destinations(data)
+    let newDoc = new dbModel.accommodations(data)
 
     if (!epValidateSync(newDoc, reject)) return
     newDoc.save().then(resolve).catch(reject)
@@ -79,7 +80,7 @@ function put(dbModel, sessionDoc, req) {
     let data = req.body || {}
     delete data._id
     console.log('data:',data)
-    dbModel.destinations
+    dbModel.accommodations
       .findOne({ _id: req.params.param1 })
       .then((doc) => {
         if (dbNull(doc, reject)) {
@@ -111,7 +112,7 @@ function deleteItem(dbModel, sessionDoc, req) {
   return new Promise((resolve, reject) => {
     if (req.params.param1 == undefined) return restError.param1(req, next)
 
-    dbModel.destinations.removeOne(sessionDoc, { _id: req.params.param1 }).then(resolve).catch(err => {
+    dbModel.accommodations.removeOne(sessionDoc, { _id: req.params.param1 }).then(resolve).catch(err => {
       console.log(err)
       reject(err)
     })

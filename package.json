@@ -34,6 +34,7 @@
     "colors": "^1.4.0",
     "cookie-parser": "^1.4.6",
     "cors": "^2.8.5",
+    "country-list-json": "^1.1.0",
     "debug": "^4.3.4",
     "dotenv": "^16.3.1",
     "eval": "^0.1.8",

@@ -86,6 +86,9 @@ function getList(dbModel, sessionDoc, req) {
 
     dbModel.tours.paginate(filter, options)
       .then(result => {
+        result.docs.forEach(doc=>{
+          doc.images=(doc.images || []).slice(0,3)
+        })
         resolve(result)
       }).catch(reject)
   })
