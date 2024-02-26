@@ -10,25 +10,33 @@ module.exports = function (dbModel) {
 			inclusions: { type: String, default: '' },
 			exclusions: { type: String, default: '' },
 			currency: { type: String, default: 'USD', enum: ['USD', 'EUR', 'AZN', 'RUB', 'TRY', 'GBP'] },
+			priceWithoutDiscount: { type: Number, default: 0, min:0 },
+			price: { type: Number, default: 0, min:0, index:true },
 			singleSupplement: { type: Number, default: 0 },
 			publishStart: { type: Date, default: Date.now, index: true },
 			publishEnd: { type: Date, default: Date.now, index: true },
 			images: [{
-				image: { type: String, default: '' },
-				thumbnail: { type: String, default: '' },
-			}],
+        title: { type: String, default: '' },
+        src: { type: String, default: '' },
+        width: { type: Number, default: 800 },
+        height: { type: Number, default: 800 },
+        style: { type: String, default: '' },
+        alt: { type: String, default: '' },
+        thumbnail: { type: String, default: '' },
+      }],
 			priceTable: [{
 				dateFrom: { type: Date, default: null },
 				dateTo: { type: Date, default: null },
 				deadline: { type: Date, default: null },
 				status: { type: String, default: '', enum: ['', 'avail', 'closed', 'cancelled'] },
-				price: { type: Number, default: 0 },
+				price: { type: Number, default: 0, min:0 },
 			}],
 			travelPlan: [{
 				step: { type: Number, default: 0 },
 				title: { type: String, default: '' },
 				description: { type: String, default: '' },
 			}],
+			showcase: { type: Boolean, default: false, index: true },
 			passive: { type: Boolean, default: false, index: true },
 			createdDate: { type: Date, default: Date.now },
 			modifiedDate: { type: Date, default: Date.now, index: true },
@@ -36,7 +44,12 @@ module.exports = function (dbModel) {
 		{ versionKey: false }
 	)
 
-	schema.pre('save', (next) => next())
+	schema.pre('save', (next) =>{ 
+		if(this.price>this.priceWithoutDiscount){
+			this.priceWithoutDiscount=this.price
+		}
+		next()
+	})
 	schema.pre('remove', (next) => next())
 	schema.pre('remove', true, (next, done) => next())
 	schema.on('init', (model) => { })

@@ -1,3 +1,5 @@
+
+
 module.exports = (dbModel, sessionDoc, req) => new Promise(async (resolve, reject) => {
   if (!sessionDoc && ['POST', 'PUT', 'DELETE'].includes(req.method))
     return restError.auth(req, reject)
@@ -19,7 +21,7 @@ module.exports = (dbModel, sessionDoc, req) => new Promise(async (resolve, rejec
 function getOne(dbModel, sessionDoc, req) {
   return new Promise((resolve, reject) => {
     dbModel.destinations
-      .findOne({ _id: req.params.param1 })
+      .findOne({ _id: req.params.param1, passive:false })
       .then(doc => {
         if (dbNull(doc, reject)) {
           resolve(doc)
@@ -29,31 +31,25 @@ function getOne(dbModel, sessionDoc, req) {
   })
 }
 
+
 function getList(dbModel, sessionDoc, req) {
   return new Promise((resolve, reject) => {
     let options = {
       page: req.query.page || 1,
       limit: req.query.pageSize || 10,
       select: '_id title country images passive',
-
-      // populate: [
-      //   {
-      //     path: 'destinations',
-      //     select: '_id name',
-      //   },
-      // ],
     }
-
-    // if (req.query.pageSize || req.query.limit)
-    //   options.limit = req.query.pageSize || req.query.limit
 
     let filter = {
-      passive:false
+      passive:false,
+      'images.0':{$exists:true}
     }
-
 
     dbModel.destinations.paginate(filter, options)
       .then(result => {
+        result.docs.forEach(doc => {
+          doc.images = (doc.images || []).slice(0, 1)
+        })
         resolve(result)
       }).catch(reject)
   })

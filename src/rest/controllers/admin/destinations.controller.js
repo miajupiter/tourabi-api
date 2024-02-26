@@ -38,6 +38,7 @@ function getOne(dbModel, sessionDoc, req) {
   })
 }
 
+
 function getList(dbModel, sessionDoc, req) {
   return new Promise((resolve, reject) => {
     let options = {
@@ -54,8 +55,8 @@ function getList(dbModel, sessionDoc, req) {
 
     dbModel.destinations.paginate(filter, options)
       .then(result => {
-        result.docs.forEach(doc=>{
-          doc.images=(doc.images || []).slice(0,3)
+        result.docs.forEach(doc => {
+          doc.images = (doc.images || []).slice(0, 3)
         })
         resolve(result)
       }).catch(reject)
@@ -78,7 +79,7 @@ function put(dbModel, sessionDoc, req) {
     if (req.params.param1 == undefined) return restError.param1(req, reject)
     let data = req.body || {}
     delete data._id
-    console.log('data:',data)
+    console.log('data:', data)
     dbModel.destinations
       .findOne({ _id: req.params.param1 })
       .then((doc) => {
@@ -87,7 +88,7 @@ function put(dbModel, sessionDoc, req) {
           if (!epValidateSync(newDoc, (err) => {
             reject(err)
           })) return
-          console.log('newDoc.passive:',newDoc.passive)
+          console.log('newDoc.passive:', newDoc.passive)
           newDoc.save().then(resp => {
             if ((req.query.partial || '').toString() === 'true') {
               resolve(data)
