@@ -3,7 +3,7 @@ module.exports = function (dbModel) {
   let schema = mongoose.Schema(
     {
       title: { type: String, required: true, unique: true },
-      propertyType: { type: String, required: true, default:'hotel', enum:['hotel','hostel','guesthouse','lodging','tent','caravan','comping','boat','housing','residence'] },
+      propertyType: { type: String, required: true, default:'hotel', enum:['hotel','hostel','guesthouse','lodging','tent','caravan','camping','boat','housing','residence'] },
       description: { type: String, default: '' },
       stars: { type: Number, default: 2, index:true },
       capacity: { type: Number, default: 0 },
