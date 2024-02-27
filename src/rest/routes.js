@@ -76,7 +76,7 @@ async function adminControllers(app, route) {
     if (restControllers.admin[req.params.func]) {
       passport(req)
         .then((sessionDoc) => {
-          if (['manager', 'admin', 'sysadmin'].includes(sessionDoc.userId.role)) {
+          if (['manager', 'admin', 'developer'].includes(sessionDoc.userId.role)) {
             restControllers.admin[req.params.func](db, sessionDoc, req)
               .then((data) => {
                 if (data == undefined) res.json({ success: true })

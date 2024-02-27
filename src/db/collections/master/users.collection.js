@@ -5,7 +5,7 @@ module.exports = function (dbModel) {
       name: { type: String, default:'',index:true },
       email: { type: String, required: true, unique: true },
       password: { type: String, required: true, index: true },
-      role: { type: String, default: 'user', enum: ['user', 'manager', 'admin', 'sysadmin'] },
+      role: { type: String, default: 'user', enum: ['user', 'manager', 'admin', 'developer'] },
       firstName: { type: String, default:'',  required11: true },
       lastName: { type: String,default:'',  required11: true },
       gender: { type: String, default: '', enum: ['', 'female', 'male', 'other'] },
