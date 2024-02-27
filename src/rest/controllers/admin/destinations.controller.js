@@ -79,7 +79,7 @@ function put(dbModel, sessionDoc, req) {
     if (req.params.param1 == undefined) return restError.param1(req, reject)
     let data = req.body || {}
     delete data._id
-    console.log('data:', data)
+    
     dbModel.destinations
       .findOne({ _id: req.params.param1 })
       .then((doc) => {

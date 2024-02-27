@@ -27,7 +27,7 @@ module.exports = (app) => {
   })
 
   app.all('/api/v1/*', function (req, res, next) {
-    console.log(req.method, `req.params:`, req.params, '\tbody:', req.body, '\tquery:', req.query, '\theaders.token:', req.headers.token)
+    // console.log(req.method, `req.params:`, req.params, '\tbody:', req.body, '\tquery:', req.query, '\theaders.token:', req.headers.token)
     next()
   })
 
@@ -171,7 +171,7 @@ async function passport(req) {
     if (!token) return resolve(null)
     auth.verify(token)
       .then(decoded => {
-        console.log(`decoded:`, decoded)
+        // console.log(`decoded:`, decoded)
         db.sessions.findOne({ sessionToken: decoded.sessionToken })
           .populate([{
             path: 'userId',

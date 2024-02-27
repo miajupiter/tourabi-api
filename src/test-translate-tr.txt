@@ -1,0 +1,21 @@
+
+  ## *Dağ*
+
+*Kırgızistan'daki 8 günlük Lenin tepe turu ile her yıl yüzlerce alpinist tarafından fethedilen dünyanın en popüler zirvelerinden birini keşfedin. Dağ, orta seviye tırmanma zorluğu ile birçok insanı kendine çekiyor ve bu nedenle dünyanın her yerinden yürüyüş hayranlarıyla tanışabilirsiniz. *
+
+***
+
+*Ayrıca tur sırasında Bişkek ve Oş manzaralarını görecek ve programın sonuna kadar Kırgızistan'ın ana beldesi olan Issyk-Kul Gölü kıyısında biraz dinleneceksiniz. *
+
+<img height="621" width="467" src="https://tourabi.s3.eu-central-1.amazonaws.com/mdximages/IMG_20231121_132150.jpg" />
+
+
+
+``
+const test='Bu çeviri için bir test kodu'
+
+console.log (test)
+``
+
+bitti.
+  

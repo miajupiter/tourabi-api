@@ -3,9 +3,10 @@ module.exports = function (dbModel) {
   let schema = mongoose.Schema(
     {
       title: { type: String, required: true, unique: true },
-      propertyType: { type: String, required: true, default:'hotel', enum:['hotel','hostel','guesthouse','lodging','tent','caravan','camping','boat','housing','residence'] },
+      propertyType: { type: String, required: true, default: 'hotel', enum: ['hotel', 'hostel', 'guesthouse', 'lodging', 'tent', 'caravan', 'camping', 'boat', 'housing', 'residence'] },
+      destination: { type: String, default: '', index: true },
       description: { type: String, default: '' },
-      stars: { type: Number, default: 2, index:true },
+      stars: { type: Number, default: 2, index: true },
       capacity: { type: Number, default: 0 },
       country: { type: String, default: '', index: true },
       addressText: { type: String, default: '' },
@@ -52,8 +53,24 @@ module.exports = function (dbModel) {
         commentDate: { type: Date, default: Date.now },
       }],
       passive: { type: Boolean, default: false, index: true },
-      createdDate: { type: Date, default: Date.now },
+      createdDate: { type: Date, default: Date.now, select: false },
       modifiedDate: { type: Date, default: Date.now, index: true },
+      i18n: {
+        type: Object,
+        default: {
+          lastTranslated: { type: Date, default: Date.UTC(0, 0, 0), index: true },
+          en: { title: String, description: String },
+          tr: { title: String, description: String },
+          ru: { title: String, description: String },
+          de: { title: String, description: String },
+          es: { title: String, description: String },
+          ko: { title: String, description: String },
+          fr: { title: String, description: String },
+          zh: { title: String, description: String },
+        },
+        select: false
+      },
+      temp:{}
     },
     { versionKey: false }
   )

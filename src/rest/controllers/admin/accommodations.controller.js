@@ -1,6 +1,4 @@
 module.exports = (dbModel, sessionDoc, req) => new Promise(async (resolve, reject) => {
-  if (!sessionDoc && ['POST', 'PUT', 'DELETE'].includes(req.method))
-    return restError.auth(req, reject)
   switch (req.method) {
     case 'GET':
       if (req.params.param1 != undefined) {
@@ -56,7 +54,7 @@ function getList(dbModel, sessionDoc, req) {
     dbModel.accommodations.paginate(filter, options)
       .then(result => {
         result.docs.forEach(doc => {
-          doc.images=(doc.images || []).slice(0,3)
+          doc.images = (doc.images || []).slice(0, 3)
         })
         resolve(result)
       }).catch(reject)
@@ -79,7 +77,7 @@ function put(dbModel, sessionDoc, req) {
     if (req.params.param1 == undefined) return restError.param1(req, reject)
     let data = req.body || {}
     delete data._id
-    console.log('data:',data)
+
     dbModel.accommodations
       .findOne({ _id: req.params.param1 })
       .then((doc) => {
@@ -88,7 +86,7 @@ function put(dbModel, sessionDoc, req) {
           if (!epValidateSync(newDoc, (err) => {
             reject(err)
           })) return
-          console.log('newDoc.passive:',newDoc.passive)
+
           newDoc.save().then(resp => {
             if ((req.query.partial || '').toString() === 'true') {
               resolve(data)

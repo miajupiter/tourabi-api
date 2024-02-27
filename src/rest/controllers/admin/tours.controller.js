@@ -112,7 +112,7 @@ function put(dbModel, sessionDoc, req) {
     let data = req.body || {}
     delete data._id
 
-
+  
     dbModel.tours
       .findOne({ _id: req.params.param1 })
       .then((doc) => {

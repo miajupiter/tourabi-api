@@ -1,6 +1,4 @@
 module.exports = (dbModel, sessionDoc, req) => new Promise(async (resolve, reject) => {
-  if (!sessionDoc && ['POST', 'PUT', 'DELETE'].includes(req.method))
-    return restError.auth(req, reject)
   switch (req.method) {
     case 'GET':
       if (req.params.param1 != undefined) {
@@ -27,11 +25,11 @@ module.exports = (dbModel, sessionDoc, req) => new Promise(async (resolve, rejec
 
 function getOne(dbModel, sessionDoc, req) {
   return new Promise((resolve, reject) => {
-    dbModel.users
+    dbModel.deneme
       .findOne({ _id: req.params.param1 })
       .then(doc => {
         if (dbNull(doc, reject)) {
-          resolve(doc)
+          resolve(doc.toJSON())
         }
       })
       .catch(reject)
@@ -43,8 +41,8 @@ function getList(dbModel, sessionDoc, req) {
     let options = {
       page: req.query.page || 1,
       limit: req.query.pageSize || 10,
-      select: '-password',
-
+      // select: '_id title country images passive',
+      select:'+createdDate'
     }
 
     let filter = {}
@@ -53,8 +51,9 @@ function getList(dbModel, sessionDoc, req) {
       filter.passive = req.query.passive
     }
 
-    dbModel.users.paginate(filter, options)
+    dbModel.deneme.paginate(filter, options)
       .then(result => {
+
         resolve(result)
       }).catch(reject)
   })
@@ -64,29 +63,28 @@ function post(dbModel, sessionDoc, req) {
   return new Promise((resolve, reject) => {
     let data = req.body || {}
     data._id = undefined
-    let newDoc = new dbModel.users(data)
-    newDoc.name=newDoc.firstName + ' ' + newDoc.lastName
+    let newDoc = new dbModel.deneme(data)
+
     if (!epValidateSync(newDoc, reject)) return
     newDoc.save().then(resolve).catch(reject)
   })
 }
 
+
 function put(dbModel, sessionDoc, req) {
   return new Promise((resolve, reject) => {
     if (req.params.param1 == undefined) return restError.param1(req, reject)
-    let data = req.body || {}
+    const data = req.body || {}
     delete data._id
 
-    dbModel.users
+
+    dbModel.deneme
       .findOne({ _id: req.params.param1 })
       .then((doc) => {
         if (dbNull(doc, reject)) {
-          let newDoc = Object.assign(doc, data)
-          newDoc.name=newDoc.firstName + ' ' + newDoc.lastName
-          if (!epValidateSync(newDoc, (err) => {
-            reject(err)
-          })) return
-          
+          const newDoc = Object.assign(doc, data)
+          if (!epValidateSync(newDoc, reject)) return
+
           newDoc.save().then(resp => {
             if ((req.query.partial || '').toString() === 'true') {
               resolve(data)
@@ -110,7 +108,7 @@ function deleteItem(dbModel, sessionDoc, req) {
   return new Promise((resolve, reject) => {
     if (req.params.param1 == undefined) return restError.param1(req, next)
 
-    dbModel.users.removeOne(sessionDoc, { _id: req.params.param1 }).then(resolve).catch(err => {
+    dbModel.deneme.removeOne(sessionDoc, { _id: req.params.param1 }).then(resolve).catch(err => {
       console.log(err)
       reject(err)
     })
