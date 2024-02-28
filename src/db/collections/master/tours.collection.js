@@ -16,6 +16,10 @@ module.exports = function (dbModel) {
 			singleSupplement: { type: Number, default: 0 },
 			publishStart: { type: Date, default: Date.now, index: true },
 			publishEnd: { type: Date, default: Date.now, index: true },
+			groupSize: {
+				min: { type: Number, default: 0 },
+				max: { type: Number, default: 0 }
+			},
 			images: [{
 				title: { type: String, default: '' },
 				src: { type: String, default: '' },
