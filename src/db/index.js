@@ -144,7 +144,7 @@ function connectMongoDatabase(collectionFolder, mongoAddress, dbObj) {
     if (collectionFolder && mongoAddress && !dbObj.conn) {
       collectionLoader(path.join(__dirname, collectionFolder), '.collection.js')
         .then((holder) => {
-          dbObj.conn = mongoose.createConnection(mongoAddress, { autoIndex: true })
+          dbObj.conn = mongoose.createConnection(mongoAddress, { autoIndex: false })
           dbObj.conn.on('connected', () => {
             Object.keys(holder).forEach((key) => {
               dbObj[key] = holder[key](dbObj)
