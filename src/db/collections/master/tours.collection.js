@@ -14,12 +14,17 @@ module.exports = function (dbModel) {
 			priceWithoutDiscount: { type: Number, default: 0, min: 0 },
 			price: { type: Number, default: 0, min: 0, index: true },
 			singleSupplement: { type: Number, default: 0 },
+			pricePerPerson: {
+				person1: { eco: { type: Number, default: 0 }, com: { type: Number, default: 0 } },
+				person2: { eco: { type: Number, default: 0 }, com: { type: Number, default: 0 } },
+				person3: { eco: { type: Number, default: 0 }, com: { type: Number, default: 0 } },
+				person4: { eco: { type: Number, default: 0 }, com: { type: Number, default: 0 } },
+				singleSupplement: { eco: { type: Number, default: 0 }, com: { type: Number, default: 0 } }
+			},
 			publishStart: { type: Date, default: Date.now, index: true },
 			publishEnd: { type: Date, default: Date.now, index: true },
-			groupSize: {
-				min: { type: Number, default: 0 },
-				max: { type: Number, default: 0 }
-			},
+			groupMin: { type: Number, default: 0 },
+			groupMax: { type: Number, default: 0 },
 			images: [{
 				title: { type: String, default: '' },
 				src: { type: String, default: '' },
@@ -30,10 +35,10 @@ module.exports = function (dbModel) {
 				thumbnail: { type: String, default: '' },
 			}],
 			priceTable: [{
-				dateFrom: { type: Date, default: null },
-				dateTo: { type: Date, default: null },
-				deadline: { type: Date, default: null },
-				status: { type: String, default: '', enum: ['', 'avail', 'closed', 'cancelled'] },
+				dateFrom: { type: String, default: new Date().toISOString().substring(0,10) },
+				dateTo: { type: String, default: new Date().toISOString().substring(0,10) },
+				deadline: { type: String, default: new Date().toISOString().substring(0,10) },
+				status: { type: String, default: 'avail', enum: ['', 'avail', 'closed', 'cancelled'] },
 				price: { type: Number, default: 0, min: 0 },
 			}],
 			travelPlan: [{
@@ -66,9 +71,6 @@ module.exports = function (dbModel) {
 	)
 
 	schema.pre('save', (next) => {
-		if (this.price > this.priceWithoutDiscount) {
-			this.priceWithoutDiscount = this.price
-		}
 		next()
 	})
 	schema.pre('remove', (next) => next())

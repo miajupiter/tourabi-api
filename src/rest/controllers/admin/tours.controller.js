@@ -38,7 +38,7 @@ function copy(dbModel, sessionDoc, req) {
           let obj = doc.toJSON()
           delete obj._id
           obj.title = obj.title + ' Copy'
-          obj.passive=true
+          obj.passive = true
           const newDoc = new dbModel.tours(obj)
           if (!epValidateSync(newDoc, reject)) return
           newDoc
@@ -86,8 +86,8 @@ function getList(dbModel, sessionDoc, req) {
 
     dbModel.tours.paginate(filter, options)
       .then(result => {
-        result.docs.forEach(doc=>{
-          doc.images=(doc.images || []).slice(0,3)
+        result.docs.forEach(doc => {
+          doc.images = (doc.images || []).slice(0, 3)
         })
         resolve(result)
       }).catch(reject)
@@ -112,7 +112,6 @@ function put(dbModel, sessionDoc, req) {
     let data = req.body || {}
     delete data._id
 
-  
     dbModel.tours
       .findOne({ _id: req.params.param1 })
       .then((doc) => {
