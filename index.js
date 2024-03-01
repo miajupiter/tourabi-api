@@ -40,7 +40,7 @@
 })()
 
 function showAppInfo() {
-	let package = require('../package.json')
+	let package = require('./package.json')
 	// Application info
 	console.log('-'.repeat(70))
 	console.log('App Name:'.padding(25), package.name.toUpperCase().brightYellow)

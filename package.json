@@ -2,13 +2,13 @@
   "name": "tourabi-api",
   "version": "1.0.0",
   "description": "TourAbi is a travel agency portal",
-  "main": "src/index.js",
+  "main": "index.js",
   "directories": {
     "lib": "lib"
   },
   "scripts": {
-    "dev": "nodemon src/index.js",
-    "start": "node src/index.js"
+    "dev": "nodemon index.js",
+    "start": "node index.js"
   },
   "repository": {
     "type": "git",
