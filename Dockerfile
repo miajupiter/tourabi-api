@@ -1,4 +1,5 @@
 FROM node:20.10-alpine3.19
+RUN npm install -g yarn
 
 WORKDIR /app
 COPY ./package.json .
