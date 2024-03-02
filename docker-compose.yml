@@ -8,6 +8,8 @@ services:
       - 8512:8502
     environment:
       HTTP_PORT: 8502
+    networks:
+      - mongodb_localhost
 
 networks:
   mongodb_localhost:
