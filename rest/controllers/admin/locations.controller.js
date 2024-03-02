@@ -1,5 +1,11 @@
+const { ObjectId } = require("mongodb")
+
 module.exports = (dbModel, sessionDoc, req) => new Promise(async (resolve, reject) => {
+  if (!sessionDoc) return restError.auth(req, reject)
   switch (req.method) {
+    case 'SEARCH':
+      getList(dbModel, sessionDoc, req).then(resolve).catch(reject)
+    break
     case 'GET':
       if (req.params.param1 != undefined) {
         getOne(dbModel, sessionDoc, req).then(resolve).catch(reject)
@@ -25,11 +31,11 @@ module.exports = (dbModel, sessionDoc, req) => new Promise(async (resolve, rejec
 
 function getOne(dbModel, sessionDoc, req) {
   return new Promise((resolve, reject) => {
-    dbModel.deneme
+    dbModel.locations
       .findOne({ _id: req.params.param1 })
       .then(doc => {
         if (dbNull(doc, reject)) {
-          resolve(doc.toJSON())
+          resolve(doc)
         }
       })
       .catch(reject)
@@ -38,22 +44,18 @@ function getOne(dbModel, sessionDoc, req) {
 
 function getList(dbModel, sessionDoc, req) {
   return new Promise((resolve, reject) => {
-    let options = {
-      page: req.query.page || 1,
-      limit: req.query.pageSize || 10,
-      // select: '_id title country images passive',
-      select:'+createdDate'
-    }
+    const search=getSearchParams(req,{},{
+      select: '_id title destination country images passive',
+      populate:[{path:'destination',select:'_id title'}]
+    })
 
-    let filter = {}
-
-    if ((req.query.passive || '') != '') {
-      filter.passive = req.query.passive
-    }
-
-    dbModel.deneme.paginate(filter, options)
+    dbModel.locations.paginate(search.filter, search.options)
       .then(result => {
-
+        result.docs.forEach(doc => {
+          if(doc.images){
+            doc.images = (doc.images || []).slice(0, 3)
+          }
+        })
         resolve(result)
       }).catch(reject)
   })
@@ -62,28 +64,32 @@ function getList(dbModel, sessionDoc, req) {
 function post(dbModel, sessionDoc, req) {
   return new Promise((resolve, reject) => {
     let data = req.body || {}
+    console.log('data:',data)
     data._id = undefined
-    let newDoc = new dbModel.deneme(data)
-
+    if(!data.destination)
+      return reject('destination required')
+    data.destination=new ObjectId(data.destination)
+    let newDoc = new dbModel.locations(data)
+    console.log(`newDoc:`,newDoc)
     if (!epValidateSync(newDoc, reject)) return
     newDoc.save().then(resolve).catch(reject)
   })
 }
 
-
 function put(dbModel, sessionDoc, req) {
   return new Promise((resolve, reject) => {
     if (req.params.param1 == undefined) return restError.param1(req, reject)
-    const data = req.body || {}
+    let data = req.body || {}
     delete data._id
-
-
-    dbModel.deneme
+    
+    dbModel.locations
       .findOne({ _id: req.params.param1 })
       .then((doc) => {
         if (dbNull(doc, reject)) {
-          const newDoc = Object.assign(doc, data)
-          if (!epValidateSync(newDoc, reject)) return
+          let newDoc = Object.assign(doc, data)
+          if (!epValidateSync(newDoc, (err) => {
+            reject(err)
+          })) return
 
           newDoc.save().then(resp => {
             if ((req.query.partial || '').toString() === 'true') {
@@ -108,7 +114,7 @@ function deleteItem(dbModel, sessionDoc, req) {
   return new Promise((resolve, reject) => {
     if (req.params.param1 == undefined) return restError.param1(req, next)
 
-    dbModel.deneme.removeOne(sessionDoc, { _id: req.params.param1 }).then(resolve).catch(err => {
+    dbModel.locations.removeOne(sessionDoc, { _id: req.params.param1 }).then(resolve).catch(err => {
       console.log(err)
       reject(err)
     })

@@ -1,18 +1,23 @@
-var createError = require('http-errors')
-var express = require('express')
-var bodyParser = require('body-parser')
-var logger = require('morgan')
-var favicon = require('serve-favicon')
-var methodOverride = require('method-override')
-var cookieParser = require('cookie-parser')
-var app = express()
-var cors = require('cors')
+const createError = require('http-errors')
+const express = require('express')
+const bodyParser = require('body-parser')
+const logger = require('morgan')
+const favicon = require('serve-favicon')
+const methodOverride = require('method-override')
+const cookieParser = require('cookie-parser')
+const fileUpload = require('express-fileupload')
+const app = express()
+const cors = require('cors')
 
 module.exports = () => new Promise(async (resolve, reject) => {
-  app.use(cors())
+  app.use(cors({
+    methods:'SEARCH,GET,HEAD,PUT,PATCH,POST,DELETE'
+  }))
+  // app.use(fileUpload)
+
   app.use(favicon(path.join(__dirname, 'web-icon.png')))
 
-  // process.env.NODE_ENV === 'development' && app.use(logger('dev'))
+  process.env.NODE_ENV === 'development' && app.use(logger('dev'))
 
   app.use(bodyParser.json({ limit: "500mb" }))
   app.use(bodyParser.urlencoded({ limit: "500mb", extended: true, parameterLimit: 50000 }))
@@ -24,6 +29,8 @@ module.exports = () => new Promise(async (resolve, reject) => {
 
   // app.use('/media', express.static(path.join(__root, '../public')))
 
+  global.getSearchParams=require('../lib/searchHelper').getSearchParams
+
   global.restControllers={
     auth: await util.moduleLoader(path.join(__dirname, '/controllers/auth'), '.controller.js'),
     master: await util.moduleLoader(path.join(__dirname, '/controllers/master'), '.controller.js'),
@@ -32,7 +39,7 @@ module.exports = () => new Promise(async (resolve, reject) => {
     session:await util.moduleLoader(path.join(__dirname, '/controllers/session'), '.controller.js'),
   }
 
-
+  
   // Object.keys(restControllers.auth).forEach((key)=>{
   //   console.log(`auth :`, key)
   // })

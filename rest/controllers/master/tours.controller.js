@@ -1,5 +1,8 @@
 module.exports = (dbModel, sessionDoc, req) => new Promise(async (resolve, reject) => {
   switch (req.method) {
+    case 'SEARCH':
+      getList(dbModel, sessionDoc, req).then(resolve).catch(reject)
+    break
     case 'GET':
       if (req.params.param1 != undefined) {
         if (req.params.param1 == 'showcase') {
@@ -27,9 +30,6 @@ function showcase(dbModel, sessionDoc, req) {
       select: '_id title duration places priceWithoutDiscount price currency images',
     }
 
-    // const totalDocs=await dbModel.tours.countDocuments({passive:false})
-    // const pageCount=totalDocs/options.limit
-    // options.page=util.randomNumber(1,pageCount)
     let filter = {
       passive: false
     }
@@ -44,37 +44,10 @@ function showcase(dbModel, sessionDoc, req) {
       }
     ])
       .then(docs => {
-        // docs.forEach(doc=>{
-        //   console.log(`doc.resim`,doc.resim)
-        //   // doc.images=doc.images.slice(0,1)
-        //   // if(doc.images.length>0){
-        //   //   doc.image=doc.images[0]
-        //   // }
-        //   // delete doc.images
-        // })
-
-        resolve(docs)
+          resolve(docs)
       })
       .catch(reject)
 
-    // dbModel.tours.paginate(filter, options)
-    //   .then(result => {
-    //     result.docs.forEach(doc => {
-    //       doc.image = (doc.images || []).slice(0, 1)
-    //     })
-    //     resolve(result)
-    //   }).catch(reject)
-
-    // dbModel.tours.find(filter)
-    //   .select('_id title duration places priceWithoutDiscount price currency images')
-    //   .limit( req.query.pageSize || 4)
-    //   .sort({ showcase: 1, createdDate: -1 })
-    //   .then(docs => {
-    //     docs.forEach(doc => {
-    //       doc.images = (doc.images || []).slice(0, 1)
-    //     })
-    //     resolve(docs)
-    //   }).catch(reject)
   })
 }
 
@@ -95,21 +68,17 @@ function getOne(dbModel, sessionDoc, req) {
 
 function getList(dbModel, sessionDoc, req) {
   return new Promise((resolve, reject) => {
-    let options = {
-      page: req.query.page || 1,
-      limit: req.query.pageSize || 10,
-      select: '_id title duration places images currency passive',
-
-    }
-
-    let filter = {
-      passive: false
-    }
-
-    dbModel.tours.paginate(filter, options)
+    // const search=getSearchParams(req,{passive:false},{
+    //   select: '_id title  duration places images currency price priceWithourDiscount passive'
+    // })
+    const search=getSearchParams(req,{passive:false})
+    console.log('tours search.filter:',search.filter)
+    dbModel.tours.paginate(search.filter, search.options)
       .then(result => {
         result.docs.forEach(doc => {
-          doc.images = (doc.images || []).slice(0, 3)
+          if(doc.images){
+            doc.images = (doc.images || []).slice(0, 3)
+          }
         })
         resolve(result)
       }).catch(reject)

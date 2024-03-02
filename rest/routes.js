@@ -39,7 +39,7 @@ module.exports = (app) => {
 
 
   app.use((req, res, next) => {
-    res.status(404).json({ success: false, error: 'Not found' })
+    res.status(404).json({ success: false, error: 'Api Function Not found' })
   })
 
   app.use((err, req, res, next) => {
@@ -103,15 +103,19 @@ async function masterControllers(app, route) {
     if (restControllers.master[req.params.func]) {
       passport(req)
         .then((sessionDoc) => {
-          restControllers.master[req.params.func](db, sessionDoc, req)
-            .then((data) => {
-              if (data == undefined) res.json({ success: true })
-              else if (data == null) res.json({ success: true })
-              else {
-                res.status(200).json({ success: true, data: data })
-              }
-            })
-            .catch(next)
+          if (sessionDoc) {
+            restControllers.master[req.params.func](db, sessionDoc, req)
+              .then((data) => {
+                if (data == undefined) res.json({ success: true })
+                else if (data == null) res.json({ success: true })
+                else {
+                  res.status(200).json({ success: true, data: data })
+                }
+              })
+              .catch(next)
+          } else {
+            res.status(401).json({ success: false, error: `permission denied` })
+          }
         })
         .catch((err) => {
           res.status(401).json({ success: false, error: err.message || err || 'error' })

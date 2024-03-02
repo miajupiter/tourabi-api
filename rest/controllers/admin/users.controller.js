@@ -1,7 +1,9 @@
 module.exports = (dbModel, sessionDoc, req) => new Promise(async (resolve, reject) => {
-  if (!sessionDoc && ['POST', 'PUT', 'DELETE'].includes(req.method))
-    return restError.auth(req, reject)
+  if (!sessionDoc) return restError.auth(req, reject)
   switch (req.method) {
+    case 'SEARCH':
+      getList(dbModel, sessionDoc, req).then(resolve).catch(reject)
+    break
     case 'GET':
       if (req.params.param1 != undefined) {
         getOne(dbModel, sessionDoc, req).then(resolve).catch(reject)
@@ -40,20 +42,11 @@ function getOne(dbModel, sessionDoc, req) {
 
 function getList(dbModel, sessionDoc, req) {
   return new Promise((resolve, reject) => {
-    let options = {
-      page: req.query.page || 1,
-      limit: req.query.pageSize || 10,
-      select: '-password',
-
-    }
-
-    let filter = {}
-
-    if ((req.query.passive || '') != '') {
-      filter.passive = req.query.passive
-    }
-
-    dbModel.users.paginate(filter, options)
+    const search=getSearchParams(req,{},{
+      select: '-password'
+    })
+   
+    dbModel.users.paginate(search.filter, search.options)
       .then(result => {
         resolve(result)
       }).catch(reject)

@@ -1,10 +1,10 @@
-
+const { ObjectId } = require("mongodb")
 
 module.exports = (dbModel, sessionDoc, req) => new Promise(async (resolve, reject) => {
   switch (req.method) {
     case 'SEARCH':
       getList(dbModel, sessionDoc, req).then(resolve).catch(reject)
-    break
+      break
     case 'GET':
       if (req.params.param1 != undefined) {
         getOne(dbModel, sessionDoc, req).then(resolve).catch(reject)
@@ -21,8 +21,8 @@ module.exports = (dbModel, sessionDoc, req) => new Promise(async (resolve, rejec
 
 function getOne(dbModel, sessionDoc, req) {
   return new Promise((resolve, reject) => {
-    dbModel.destinations
-      .findOne({ _id: req.params.param1, passive: false })
+    dbModel.locations
+      .findOne({ _id: req.params.param1 })
       .then(doc => {
         if (dbNull(doc, reject)) {
           resolve(doc)
@@ -32,20 +32,21 @@ function getOne(dbModel, sessionDoc, req) {
   })
 }
 
-
 function getList(dbModel, sessionDoc, req) {
   return new Promise((resolve, reject) => {
-    const search=getSearchParams(req,{passive:false})
-
-    dbModel.destinations.paginate(search.filter, search.options)
-    .then(result => {
-      result.docs.forEach(doc => {
-        if(doc.images){
-          doc.images = (doc.images || []).slice(0, 1)
-        }
-      })
-      resolve(result)
+    const search = getSearchParams(req, {}, {
+      select: '_id title destination country images passive',
+      populate: [{ path: 'destination', select: '_id title' }]
     })
-    .catch(reject)
+
+    dbModel.locations.paginate(search.filter, search.options)
+      .then(result => {
+        result.docs.forEach(doc => {
+          if (doc.images) {
+            doc.images = (doc.images || []).slice(0, 3)
+          }
+        })
+        resolve(result)
+      }).catch(reject)
   })
 }

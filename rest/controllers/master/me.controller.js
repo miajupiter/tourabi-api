@@ -1,7 +1,4 @@
 module.exports = (dbModel, sessionDoc, req) => new Promise((resolve, reject) => {
-	console.log(`buraya geldi sessionDoc:`, sessionDoc)
-	if(!sessionDoc)
-		return restError.auth(req,reject)
 
 	switch (req.method) {
 		case 'GET':
@@ -32,18 +29,21 @@ function getMyProfile(dbModel, sessionDoc, req) {
 
 
 function updateMyProfile(dbModel, sessionDoc, req) {
-	console.log('req.body:', req.body)
+	
 	return new Promise((resolve, reject) => {
 		dbModel.users.findOne({ _id: sessionDoc.userId }).then(doc => {
 			if (dbNull(doc, reject)) {
 				let data = req.body || {}
 				delete data._id
-				console.log('data:', data)
+				
 				let newDoc =Object.assign(doc, data)
 				if (!epValidateSync(newDoc, reject)) return
 				newDoc.save().then(resp => {
-					// console.log('resp:', resp)
-					resolve(resp)
+					if ((req.query.partial || '').toString() === 'true') {
+						resolve(data)
+					} else {
+						resolve(resp)
+					}
 				}).catch(err => {
 					console.log(err)
 					reject(err)

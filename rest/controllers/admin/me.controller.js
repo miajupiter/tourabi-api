@@ -1,7 +1,4 @@
 module.exports = (dbModel, sessionDoc, req) => new Promise((resolve, reject) => {
-	if(!sessionDoc)
-		return restError.auth(req,reject)
-
 	switch (req.method) {
 		case 'GET':
 			getMyProfile(dbModel, sessionDoc, req).then(resolve).catch(reject)
