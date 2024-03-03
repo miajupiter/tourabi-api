@@ -59,6 +59,9 @@ function getOne(dbModel, sessionDoc, req) {
         if (dbNull(doc, reject)) {
           // var obj = doc.toJSON()
           // obj.id = doc._id.toString()
+          if(doc.priceTable) {
+            doc.priceTable=doc.priceTable.slice(0,6)
+          }
           resolve(doc)
         }
       })
