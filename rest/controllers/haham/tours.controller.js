@@ -2,7 +2,7 @@ module.exports = (dbModel, sessionDoc, req) => new Promise(async (resolve, rejec
   switch (req.method) {
     case 'SEARCH':
       getList(dbModel, sessionDoc, req).then(resolve).catch(reject)
-    break
+      break
     case 'GET':
       if (req.params.param1 != undefined) {
         if (req.params.param1 == 'showcase') {
@@ -39,12 +39,12 @@ function showcase(dbModel, sessionDoc, req) {
       {
         $project: {
           _id: 1, title: 1, duration: 1, places: 1, priceWithoutDiscount: 1, price: 1, currency: 1,
-          image:{"$first":"$images"}
+          image: { "$first": "$images" }
         }
       }
     ])
       .then(docs => {
-          resolve(docs)
+        resolve(docs)
       })
       .catch(reject)
 
@@ -57,11 +57,6 @@ function getOne(dbModel, sessionDoc, req) {
       .findOne({ _id: req.params.param1 })
       .then(doc => {
         if (dbNull(doc, reject)) {
-          // var obj = doc.toJSON()
-          // obj.id = doc._id.toString()
-          if(doc.priceTable) {
-            doc.priceTable=doc.priceTable.slice(0,6)
-          }
           resolve(doc)
         }
       })
@@ -71,15 +66,12 @@ function getOne(dbModel, sessionDoc, req) {
 
 function getList(dbModel, sessionDoc, req) {
   return new Promise((resolve, reject) => {
-    // const search=getSearchParams(req,{passive:false},{
-    //   select: '_id title  duration places images currency price priceWithourDiscount passive'
-    // })
-    const search=getSearchParams(req,{passive:false})
-    console.log('tours search.filter:',search.filter)
+ 
+    const search = getSearchParams(req, { passive: false })
     dbModel.tours.paginate(search.filter, search.options)
       .then(result => {
         result.docs.forEach(doc => {
-          if(doc.images){
+          if (doc.images) {
             doc.images = (doc.images || []).slice(0, 3)
           }
         })

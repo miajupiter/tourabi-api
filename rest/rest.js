@@ -33,7 +33,7 @@ module.exports = () => new Promise(async (resolve, reject) => {
 
   global.restControllers={
     auth: await util.moduleLoader(path.join(__dirname, '/controllers/auth'), '.controller.js'),
-    master: await util.moduleLoader(path.join(__dirname, '/controllers/master'), '.controller.js'),
+    haham: await util.moduleLoader(path.join(__dirname, '/controllers/haham'), '.controller.js'),
     admin: await util.moduleLoader(path.join(__dirname, '/controllers/admin'), '.controller.js'),
     // repo:await util.moduleLoader(path.join(__dirname, '/controllers/repo'), '.controller.js'),
     session:await util.moduleLoader(path.join(__dirname, '/controllers/session'), '.controller.js'),

@@ -63,8 +63,10 @@ module.exports = function (dbModel) {
       reviewMessage:{ type: String, default:'' },
       reviewedBy: { type: ObjectId, ref: 'users', index: true},
       reviewedDate: { type: Date, default: Date.now },
-      createdDate: { type: Date, default: Date.now, index: true },
-      modifiedDate: { type: Date, default: Date.now }
+      createdDate: { type: Date, default: Date.now },
+			createdBy:{type:String,default:''},
+			modifiedDate: { type: Date, default: Date.now, index: true },
+			modifiedBy:{type:String,default:'',index:true}
     },
     { versionKey: false }
   )

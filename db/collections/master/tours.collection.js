@@ -2,8 +2,8 @@ const collectionName = path.basename(__filename, '.collection.js')
 module.exports = function (dbModel) {
 	let schema = mongoose.Schema(
 		{
-			owner: { type: mongoose.Schema.Types.ObjectId, ref: 'members', default: null, index: true },
 			title: { type: String, required: true, unique: true },
+			code: { type: String, default: '', index: true }, //, max:12  required: true, unique: true },
 			destination: { type: String, default: '', index: true },
 			description: { type: String, default: '' },
 			duration: { type: Number, default: 0, index: true },
@@ -13,13 +13,11 @@ module.exports = function (dbModel) {
 			currency: { type: String, default: 'USD', enum: ['USD', 'EUR', 'AZN', 'RUB', 'TRY', 'GBP'] },
 			priceWithoutDiscount: { type: Number, default: 0, min: 0 },
 			price: { type: Number, default: 0, min: 0, index: true },
-			singleSupplement: { type: Number, default: 0 },
-			pricePerPerson: {
-				person1: { eco: { type: Number, default: 0 }, com: { type: Number, default: 0 } },
-				person2: { eco: { type: Number, default: 0 }, com: { type: Number, default: 0 } },
-				person3: { eco: { type: Number, default: 0 }, com: { type: Number, default: 0 } },
-				person4: { eco: { type: Number, default: 0 }, com: { type: Number, default: 0 } },
-				singleSupplement: { eco: { type: Number, default: 0 }, com: { type: Number, default: 0 } }
+			travelOptions: {
+				normal: { type: Boolean, default: false },
+				economy: { type: Boolean, default: false },
+				comfort: { type: Boolean, default: false },
+				singleSupplement: { type: Boolean, default: false },
 			},
 			publishStart: { type: Date, default: Date.now, index: true },
 			publishEnd: { type: Date, default: Date.now, index: true },
@@ -34,13 +32,7 @@ module.exports = function (dbModel) {
 				alt: { type: String, default: '' },
 				thumbnail: { type: String, default: '' },
 			}],
-			priceTable: [{
-				dateFrom: { type: String, default: new Date().toISOString().substring(0,10) },
-				dateTo: { type: String, default: new Date().toISOString().substring(0,10) },
-				deadline: { type: String, default: new Date().toISOString().substring(0,10) },
-				status: { type: String, default: 'avail', enum: ['', 'avail', 'closed', 'cancelled'] },
-				price: { type: Number, default: 0, min: 0 },
-			}],
+
 			travelPlan: [{
 				step: { type: Number, default: 0 },
 				title: { type: String, default: '' },
@@ -49,7 +41,9 @@ module.exports = function (dbModel) {
 			showcase: { type: Boolean, default: false, index: true },
 			passive: { type: Boolean, default: false, index: true },
 			createdDate: { type: Date, default: Date.now },
+			createdBy:{type:String,default:''},
 			modifiedDate: { type: Date, default: Date.now, index: true },
+			modifiedBy:{type:String,default:'',index:true},
 			i18n: {
 				type: Object,
 				default: {

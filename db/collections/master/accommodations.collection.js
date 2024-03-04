@@ -53,8 +53,10 @@ module.exports = function (dbModel) {
         commentDate: { type: Date, default: Date.now },
       }],
       passive: { type: Boolean, default: false, index: true },
-      createdDate: { type: Date, default: Date.now, select: false },
+      createdDate: { type: Date, default: Date.now },
+      createdBy: { type: String, default: '' },
       modifiedDate: { type: Date, default: Date.now, index: true },
+      modifiedBy: { type: String, default: '', index: true },
       i18n: {
         type: Object,
         default: {
@@ -70,7 +72,7 @@ module.exports = function (dbModel) {
         },
         select: false
       },
-      temp:{}
+      temp: {}
     },
     { versionKey: false }
   )

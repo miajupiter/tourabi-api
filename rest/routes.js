@@ -35,7 +35,7 @@ module.exports = (app) => {
   // sessionControllers(app, '/api/v1/session/:func/:param1/:param2/:param3')
   // repoControllers(app, '/api/v1/db/:func/:param1/:param2/:param3')
   adminControllers(app, '/api/v1/admin/:func/:param1/:param2/:param3')
-  masterControllers(app, '/api/v1/:func/:param1/:param2/:param3')
+  hahamControllers(app, '/api/v1/haham/:func/:param1/:param2/:param3')
 
 
   app.use((req, res, next) => {
@@ -98,13 +98,13 @@ async function adminControllers(app, route) {
 }
 
 
-async function masterControllers(app, route) {
+async function hahamControllers(app, route) {
   setRoutes(app, route, (req, res, next) => {
-    if (restControllers.master[req.params.func]) {
+    if (restControllers.haham[req.params.func]) {
       passport(req)
         .then((sessionDoc) => {
           if (sessionDoc) {
-            restControllers.master[req.params.func](db, sessionDoc, req)
+            restControllers.haham[req.params.func](db, sessionDoc, req)
               .then((data) => {
                 if (data == undefined) res.json({ success: true })
                 else if (data == null) res.json({ success: true })

@@ -32,7 +32,7 @@ function copy(dbModel, sessionDoc, req) {
   return new Promise((resolve, reject) => {
     if (req.params.param1 == undefined) return restError.param1(req, reject)
 
-    dbModel.tours
+    dbModel.tourExpeditions
       .findOne({ _id: req.params.param1 })
       .then((doc) => {
         if (dbNull(doc, reject)) {
@@ -40,7 +40,7 @@ function copy(dbModel, sessionDoc, req) {
           delete obj._id
           obj.title = obj.title + ' Copy'
           obj.passive = true
-          const newDoc = new dbModel.tours(obj)
+          const newDoc = new dbModel.tourExpeditions(obj)
           if (!epValidateSync(newDoc, reject)) return
           newDoc
             .save()
@@ -57,7 +57,7 @@ function copy(dbModel, sessionDoc, req) {
 
 function getOne(dbModel, sessionDoc, req) {
   return new Promise((resolve, reject) => {
-    dbModel.tours
+    dbModel.tourExpeditions
       .findOne({ _id: req.params.param1 })
       .then(doc => {
         if (dbNull(doc, reject)) {
@@ -72,13 +72,9 @@ function getList(dbModel, sessionDoc, req) {
   return new Promise((resolve, reject) => {
     const search = getSearchParams(req, {}, {
     })
-    dbModel.tours.paginate(search.filter, search.options)
+    dbModel.tourExpeditions.paginate(search.filter, search.options)
       .then(result => {
-        result.docs.forEach(doc => {
-          if (doc.images) {
-            doc.images = (doc.images || []).slice(0, 3)
-          }
-        })
+
         resolve(result)
       }).catch(reject)
   })
@@ -89,7 +85,7 @@ function post(dbModel, sessionDoc, req) {
     let data = req.body || {}
     data._id = undefined
     data.owner = sessionDoc.userId
-    let newDoc = new dbModel.tours(data)
+    let newDoc = new dbModel.tourExpeditions(data)
     newDoc.duration = (newDoc.travelPlan || []).length
     if (!epValidateSync(newDoc, reject)) return
     newDoc.save().then(resolve).catch(reject)
@@ -102,7 +98,7 @@ function put(dbModel, sessionDoc, req) {
     let data = req.body || {}
     delete data._id
 
-    dbModel.tours
+    dbModel.tourExpeditions
       .findOne({ _id: req.params.param1 })
       .then((doc) => {
         if (dbNull(doc, reject)) {
@@ -110,12 +106,9 @@ function put(dbModel, sessionDoc, req) {
           newDoc.duration = (newDoc.travelPlan || []).length
           if (!epValidateSync(newDoc, reject)) return
           newDoc.save().then(resp => {
-
             if ((req.query.partial || '').toString() === 'true') {
-              console.log(`tours put partial:`, data)
               resolve(data)
             } else {
-              // console.log(`tours put resp:`, resp)
               resolve(resp)
             }
           }).catch(err => {
@@ -135,7 +128,7 @@ function deleteItem(dbModel, sessionDoc, req) {
   return new Promise((resolve, reject) => {
     if (req.params.param1 == undefined) return restError.param1(req, next)
 
-    dbModel.tours.removeOne(sessionDoc, { _id: req.params.param1 }).then(resolve).catch(err => {
+    dbModel.tourExpeditions.removeOne(sessionDoc, { _id: req.params.param1 }).then(resolve).catch(err => {
       console.log(err)
       reject(err)
     })

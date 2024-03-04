@@ -4,19 +4,21 @@ module.exports = function (dbModel) {
 		{
 			title: { type: String, required: true, unique: true },
 			description: { type: String, default: '' },
-			country: { type: String, default: '',index:true },
+			country: { type: String, default: '', index: true },
 			images: [{
-        title: { type: String, default: '' },
-        src: { type: String, default: '' },
-        width: { type: Number, default: 800 },
-        height: { type: Number, default: 800 },
-        style: { type: String, default: '' },
-        alt: { type: String, default: '' },
-        thumbnail: { type: String, default: '' },
-      }],
+				title: { type: String, default: '' },
+				src: { type: String, default: '' },
+				width: { type: Number, default: 800 },
+				height: { type: Number, default: 800 },
+				style: { type: String, default: '' },
+				alt: { type: String, default: '' },
+				thumbnail: { type: String, default: '' },
+			}],
 			passive: { type: Boolean, default: false, index: true },
 			createdDate: { type: Date, default: Date.now },
+			createdBy: { type: String, default: '' },
 			modifiedDate: { type: Date, default: Date.now, index: true },
+			modifiedBy: { type: String, default: '', index: true }
 		},
 		{ versionKey: false }
 	)
