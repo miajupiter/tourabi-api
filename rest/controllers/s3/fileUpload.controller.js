@@ -1,234 +1,205 @@
 const sharp = require('sharp')
-const fs = require('fs')
-const path = require('path')
 const { uploadToS3Bucket } = require('../../../lib/awsS3')
+const imageWithExif = {
+	IFD0: { Copyright: process.env.IMAGE_SHARP_COPYRIGHT || 'AliAbi Open Source Digital Equipments' }
+}
+
 
 module.exports = (dbModel, sessionDoc, req) => new Promise(async (resolve, reject) => {
 	try {
-		if (req.method == 'POST') {
-			const s3Folder = req.body.folder || req.body.s3Folder || ''
-			console.log('req.file:', req.file)
-			console.log('req.files:', req.files)
-			console.log('req.body:', req.body)
-			console.log('s3Folder:', s3Folder)
+		if (req.method != 'POST') return restError.method(req, reject)
 
-			if (!req.files || Object.keys(req.files).length === 0) {
-				return reject('No files were uploaded.')
-			}
+		const s3Folder = req.body.folder || req.body.s3Folder || ''
+		const imgResizeFit = req.body.fit || req.body.fit || 'outside'
+		devLog('req.file:', req.file)
+		devLog('req.files:', req.files)
+		devLog('req.body:', req.body)
+		devLog('s3Folder:', s3Folder)
 
-			let i = 0
-			let uploadFileList = []
+		if (!req.files || Object.keys(req.files).length === 0) {
+			return reject('No files were uploaded.')
+		}
+		var result = []
+		var backgroundTasks = []
+		let i = 0
+		///let uploadFileList = []
 
 
 
-			i = 0
-			while (i < req.files.length) {
-				const file = req.files[i]
-				const zamanDamga = new Date().toISOString().split('.')[0].replace(/-|:|T/g, '')
-				const fileName = file.originalname.toLowerCase().replace(/[^a-z0-9-.]/g, '-').replace(/((.jpeg)$|(.jpg)$|(.png)$)/, '')
 
-				let fileList = []
+		while (i < req.files.length) {
+			const file = req.files[i]
+			const zamanDamga = new Date().toISOString().split('.')[0].replace(/-|:|T/g, '')
+			const fileName = file.originalname.toLowerCase().replace(/[^a-z0-9-.]/g, '-').replace(/((.jpeg)$|(.jpg)$|(.png)$)/, '')
 
-				if (file.mimetype == 'image/png') {
-					let fileList = await convertWebp(file, file.buffer)
-					fileList.forEach(e => {
-						e.originalname = `${fileName}_t${zamanDamga}_w${e.info.width}_h${e.info.height}.webp`
-						e.fileName = `${s3Folder}/${e.originalname}`
-						uploadFileList.push(e)
+
+
+			if (file.mimetype.startsWith('image/')) {
+				/** bekleme yapma, bir yandan orjinali yedekleyelim */
+				const fileNameOrg = `original-images/${s3Folder}/${fileName}_t${zamanDamga}` + (file.mimetype == 'image/png' ? '.png' : '.jpg')
+				uploadToS3Bucket(fileNameOrg, file.mimetype, file.buffer, file.size)
+					.then(resp => {
+						devLog('original image yedek resp: ', resp)
+					}).catch(err => {
+						devError('original image yedek err: ', err)
 					})
-				} else if (file.mimetype == 'image/jpeg') {
-					let fileList = await convertAvif(file, file.buffer)
-					fileList.forEach(e => {
-						e.originalname = `${fileName}_t${zamanDamga}_w${e.info.width}_h${e.info.height}.avif`
-						e.fileName = `${s3Folder}/${e.originalname}`
+				/** end */
 
-						uploadFileList.push(e)
-					})
-				} else {
-					file.fileName = `${s3Folder}/${file.originalname}`
-					uploadFileList.push(file)
-				}
-				i++
-			}
+				let imgData = await convertMainImage(file.mimetype, file.buffer)
 
+				let s3UploadFileBasePath = `${s3Folder}/${fileName}_t${zamanDamga}`
+				let extension = file.mimetype == 'image/png' ? '.webp' : '.avif'
+				let mimetype = file.mimetype == 'image/png' ? 'image/webp' : 'image/avif'
 
-			let result = []
-			i = 0
-			while (i < uploadFileList.length) {
-				const item = uploadFileList[i]
+				let s3UploadFilePath = `${s3UploadFileBasePath}_w${imgData.info.width}_h${imgData.info.height}${extension}`
+				let fileUrl = await uploadToS3Bucket(s3UploadFilePath, mimetype, imgData.data, imgData.info.size)
 				let obj = {
-					// fieldname: 'file',
-					originalname: item.originalname,
-					// encoding: '7bit',
-					mimetype: item.mimetype,
-					size: item.size,
-
-				}
-				console.log('item.fileName:', item.fileName)
-				obj.fileUrl = await uploadToS3Bucket(item.fileName, item.mimetype, item.buffer, item.size)
-				if (item.mimetype.startsWith('image/') && item.info) {
-					obj.width = item.info.width
-					obj.height = item.info.height
+					mimetype: mimetype,
+					originalname: file.originalname,
+					size: imgData.info.size,
+					width: imgData.info.width,
+					height: imgData.info.height,
+					fileUrl: fileUrl,
+					w100FileUrl: `${process.env.AWS_S3_PUBLIC_URI}/${s3UploadFileBasePath}_w100${extension}`,
+					w200FileUrl: `${process.env.AWS_S3_PUBLIC_URI}/${s3UploadFileBasePath}_w200${extension}`,
+					w400FileUrl: `${process.env.AWS_S3_PUBLIC_URI}/${s3UploadFileBasePath}_w400${extension}`,
+					w800FileUrl: `${process.env.AWS_S3_PUBLIC_URI}/${s3UploadFileBasePath}_w800${extension}`,
+					// w1200FileUrl: `${process.env.AWS_S3_PUBLIC_URI}/${s3UploadFileBasePath}_w1200${extension}`,
 				}
 				result.push(obj)
-				i++
+
+				devLog('continueBackground i:', i, ' file:', file.originalname)
+				continueBackground({
+					file: file,
+					mainImgData: imgData,
+					extension: extension,
+					mimetype: mimetype,
+					s3UploadFileBasePath: s3UploadFileBasePath,
+					imgResizeFit: imgResizeFit,
+				})
+					.then(resp => {
+						devLog('continueBackground i:', i, ' file:', file.originalname, `\nresp:`, resp)
+					})
+					.catch(err => {
+						devError('continueBackground i:', i, ' file:', file.originalname, `\nerr:`, err)
+					})
+
+			} else {
+				let obj = {
+					mimetype: file.mimetype,
+					originalname: file.originalname,
+					size: file.size,
+					fileUrl: await uploadToS3Bucket(`${s3Folder}/${fileName}`, file.mimetype, file.buffer, file.size)
+				}
+				result.push(obj)
 			}
 
-			console.log('result:', result)
-			resolve(result)
-
-		} else {
-			restError.method(req, reject)
+			i++
 		}
+
+
+		devLog('result:', result)
+		resolve(result)
+
+		/** start converting other image sizes on background */
+		// continueBackground(imgData)
+
+
 	} catch (err) {
-		console.log(err)
+		devLog(err)
 		reject(err || 'error')
 	}
 })
 
-
-
-function convertWebp(file, buf) {
+function continueBackground(task) {
+	/** task
+	{
+		file: file,
+		mainImgData: imgData,
+		extension: extension,
+		mimetype: mimetype,
+		s3UploadFileBasePath: s3UploadFileBasePath,
+		imgResizeFit:imgResizeFit,
+	}
+ */
 	return new Promise(async (resolve, reject) => {
 		try {
-			const mimetype = 'image/webp'
-			let result = []
-			const srp = sharp(buf).webp({ nearLossless: true, }).withExif({
-				IFD0: { Copyright: process.env.IMAGE_SHARP_COPYRIGHT || 'AliAbi Open Source Digital Equipments' }
-			})
+			const file = task.file
+			const mainImgData = task.mainImgData
+			const s3UploadFileBasePath = task.s3UploadFileBasePath
+			const mimetype = task.mimetype
+			const extension = task.extension
+			const imgResizeFit = task.imgResizeFit
 
-			const buf1 = await srp.toBuffer({ resolveWithObject: true })
-
-			result.push({
-				info: buf1.info,
-				buffer: buf1.data,
-				mimetype: mimetype,
-				size: buf1.info.size,
-				width: buf1.info.width,
-				height: buf1.info.height,
-			})
-
-			const buf2 = await srp.resize(512, 512, { fit: 'cover' }).toBuffer({ resolveWithObject: true })
-
-			result.push({
-				info: buf2.info,
-				buffer: buf2.data,
-				mimetype: mimetype,
-				size: buf2.info.size,
-				width: buf2.info.width,
-				height: buf2.info.height,
-			})
-
-			const buf3 = await srp.resize(256, 256, { fit: 'cover' }).toBuffer({ resolveWithObject: true })
-
-			result.push({
-				info: buf3.info,
-				buffer: buf3.data,
-				mimetype: mimetype,
-				size: buf3.info.size,
-				width: buf3.info.width,
-				height: buf3.info.height,
-			})
-
-			const buf4 = await srp.resize(64, 64, { fit: 'cover' }).toBuffer({ resolveWithObject: true })
-
-			result.push({
-				info: buf4.info,
-				buffer: buf4.data,
-				mimetype: mimetype,
-				size: buf4.info.size,
-				width: buf4.info.width,
-				height: buf4.info.height,
-			})
+			/** Image 800  buffer from mainImgData */
+			const img800 = await convertSmallImages(file.mimetype, mainImgData.data, imgResizeFit, 800, 800)
+			devLog('img800 created:', img800.info)
+			const w800FileUrl = await uploadToS3Bucket(`${s3UploadFileBasePath}_w800${extension}`, mimetype, img800.data, img800.info.size)
+			devLog('w800FileUrl uploaded:', w800FileUrl)
 
 
+			/** Image 400  buffer from .... */
+			const img400 = await convertSmallImages(file.mimetype, img800.data, imgResizeFit, 400, 400)
+			devLog('img400 created:', img400.info)
+			const w400FileUrl = await uploadToS3Bucket(`${s3UploadFileBasePath}_w400${extension}`, mimetype, img400.data, img400.info.size)
+			devLog('w400FileUrl uploaded:', w400FileUrl)
 
-			resolve(result)
+			/** Image 200  buffer from .... */
+			const img200 = await convertSmallImages(file.mimetype, img400.data, imgResizeFit, 200, 200)
+			devLog('img200 created:', img200.info)
+			const w200FileUrl = await uploadToS3Bucket(`${s3UploadFileBasePath}_w200${extension}`, mimetype, img200.data, img200.info.size)
+			devLog('w200FileUrl uploaded:', w200FileUrl)
+
+			/** Image 100  buffer from .... */
+			const img100 = await convertSmallImages(file.mimetype, img200.data, imgResizeFit, 100, 100)
+			devLog('img100 created:', img100.info)
+			const w100FileUrl = await uploadToS3Bucket(`${s3UploadFileBasePath}_w100${extension}`, mimetype, img100.data, img100.info.size)
+			devLog('w100FileUrl uploaded:', w100FileUrl)
+
+			resolve(`${file.originalname} completed`)
 		} catch (err) {
-			reject(err.message)
+			devError(`err:`, err)
+			reject(err.message || err || 'error')
 		}
 	})
-
 }
 
-function convertAvif(file, buf) {
+function convertSmallImages(mimetype, buf, fit = 'contain', width = null, height = null) {
 	return new Promise(async (resolve, reject) => {
-		try {
-			const mimetype = 'image/avif'
-			let result = []
-			const srp = sharp(buf).avif({}).withExif({
-				IFD0: {
-					Copyright: process.env.IMAGE_SHARP_COPYRIGHT || 'AliAbi Open Source Digital Equipments'
-				}
-			})
-
-			const buf1 = await srp.toBuffer({ resolveWithObject: true })
-
-			result.push({
-				info: buf1.info,
-				buffer: buf1.data,
-				mimetype: mimetype,
-				size: buf1.info.size,
-				width: buf1.info.width,
-				height: buf1.info.height,
-			})
-
-			const buf2 = await sharp(buf1.data).avif({}).resize(512, 512, { fit: 'cover' }).toBuffer({ resolveWithObject: true })
-			// const buf2 = await srp.resize(512, 512, { fit: 'cover',kernel:'nearest' }).toBuffer({ resolveWithObject: true })
-
-			result.push({
-				info: buf2.info,
-				buffer: buf2.data,
-				mimetype: mimetype,
-				size: buf2.info.size,
-				width: buf2.info.width,
-				height: buf2.info.height,
-			})
-
-			const buf3 = await sharp(buf2.data).avif({}).resize(256, 256, { fit: 'cover' }).toBuffer({ resolveWithObject: true })
-			// const buf3 = await srp.resize(256, 256, { fit: 'cover',kernel:'nearest' }).toBuffer({ resolveWithObject: true })
-
-			result.push({
-				info: buf3.info,
-				buffer: buf3.data,
-				mimetype: mimetype,
-				size: buf3.info.size,
-				width: buf3.info.width,
-				height: buf3.info.height,
-			})
-
-			const buf4 = await sharp(buf3.data).avif({}).resize(64, 64, { fit: 'cover' }).toBuffer({ resolveWithObject: true })
-			// const buf4 = await srp.resize(64, 64, { fit: 'cover',kernel:'nearest' }).toBuffer({ resolveWithObject: true })
-
-			result.push({
-				info: buf4.info,
-				buffer: buf4.data,
-				mimetype: mimetype,
-				size: buf3.info.size,
-				width: buf3.info.width,
-				height: buf3.info.height,
-			})
-
-
-
-			resolve(result)
-		} catch (err) {
-			reject(err.message)
+		let srp = null
+		let result = null
+		if (mimetype == 'image/png') {
+			srp = sharp(buf).webp({ nearLossless: true, }).withExifMerge(imageWithExif)
+			result = await srp.withMetadata().resize(width, height, { fit: fit }).toBuffer({ resolveWithObject: true })
+			result.info.mimetype = 'image/webp'
+		} else {
+			srp = sharp(buf).avif({ lossless: true }).withExifMerge(imageWithExif)
+			result = await srp.withMetadata().resize(width, height, { fit: fit }).toBuffer({ resolveWithObject: true })
+			result.info.mimetype = 'image/avif'
 		}
+		resolve(result)
 	})
-
 }
 
 
-// req.files: [
-//   {
-//     fieldname: 'file',
-//     originalname: '14533467_172111819908353_6986170177058504704_n.jpg',
-//     encoding: '7bit',
-//     mimetype: 'image/jpeg',
-//     destination: 'C:/tmp/',
-//     filename: 'ea2db2cb84c9bd4d09523176358a5afd',
-//     path: 'C:\\tmp\\ea2db2cb84c9bd4d09523176358a5afd',
-//     size: 59658
-//   }
-// ]
+function convertMainImage(mimetype, buf) {
+	return new Promise(async (resolve, reject) => {
+		let srp = null
+		let result = null
+		if (mimetype == 'image/png') {
+			srp = sharp(buf).withMetadata().webp({ nearLossless: true, }).withExifMerge(imageWithExif)
+			result = await srp.toBuffer({ resolveWithObject: true })
+			// result = await srp.composite([{
+			// 	input: path.join(__dirname, 'watermark-w150.png'),
+			// }]).toBuffer({ resolveWithObject: true })
+		} else {
+			// srp = sharp(buf).withMetadata().avif({}).withExifMerge(imageWithExif)
+			srp = sharp(buf).avif({}).withExifMerge(imageWithExif)
+			result = await srp.rotate().toBuffer({ resolveWithObject: true })
+			// result = await srp.composite([{
+			// 	input: path.join(__dirname, 'watermark-w300.png'),
+			// }]).toBuffer({ resolveWithObject: true })
+		}
+		resolve(result)
+	})
+}
