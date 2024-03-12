@@ -32,10 +32,11 @@ module.exports = (app) => {
   })
 
   authControllers(app, '/api/v1/auth/:func/:param1/:param2/:param3')
-  // sessionControllers(app, '/api/v1/session/:func/:param1/:param2/:param3')
+  sessionControllers(app, '/api/v1/session/:func/:param1/:param2/:param3')
   // repoControllers(app, '/api/v1/db/:func/:param1/:param2/:param3')
   adminControllers(app, '/api/v1/admin/:func/:param1/:param2/:param3')
   hahamControllers(app, '/api/v1/haham/:func/:param1/:param2/:param3')
+  s3Controllers(app, '/api/v1/s3/:func/:param1/:param2/:param3')
 
 
   app.use((req, res, next) => {
@@ -105,6 +106,114 @@ async function hahamControllers(app, route) {
         .then((sessionDoc) => {
           if (sessionDoc) {
             restControllers.haham[req.params.func](db, sessionDoc, req)
+              .then((data) => {
+                if (data == undefined) res.json({ success: true })
+                else if (data == null) res.json({ success: true })
+                else {
+                  res.status(200).json({ success: true, data: data })
+                }
+              })
+              .catch(next)
+          } else {
+            res.status(401).json({ success: false, error: `permission denied` })
+          }
+        })
+        .catch((err) => {
+          res.status(401).json({ success: false, error: err.message || err || 'error' })
+        })
+    } else next()
+  })
+}
+
+async function sessionControllers(app, route) {
+  setRoutes(app, route, (req, res, next) => {
+    if (restControllers.session[req.params.func]) {
+      passport(req)
+        .then((sessionDoc) => {
+          if (sessionDoc) {
+            restControllers.session[req.params.func](db, sessionDoc, req)
+              .then((data) => {
+                if (data == undefined) res.json({ success: true })
+                else if (data == null) res.json({ success: true })
+                else {
+                  res.status(200).json({ success: true, data: data })
+                }
+              })
+              .catch(next)
+          } else {
+            res.status(401).json({ success: false, error: `permission denied` })
+          }
+        })
+        .catch((err) => {
+          res.status(401).json({ success: false, error: err.message || err || 'error' })
+        })
+    } else next()
+  })
+}
+
+async function s3Controllers(app, route) {
+  const multer=require('multer')
+  const appName=require('../package.json').name
+  const os=require('os')
+  // const storage = multer.diskStorage({
+  //   destination: function (req, file, cb) {
+  //     if(process.env.NODE_ENV!='production'){
+  //       cb(null,`c:/tmp/${appName}`)
+  //     }else{
+  //       cb(null, `${os.tmpdir()}/${appName}`)
+  //     }
+      
+  //   },
+  //   filename: function (req, file, cb) {
+  //     console.log('rename file.destination:',file.destination)
+  //     console.log('rename file.fieldname:',file.fieldname)
+  //     console.log('rename file.originalname:',file.originalname)
+  //     console.log('rename file.path:',file.path)
+  //     console.log('rename file.size:',file.size)
+      
+  //     // const uniqueSuffix = (new Date().toISOString().split('.')[0].replace(/-|:/g,'').replace(/T/g,'_')) + '-' + Math.round(Math.random() * 1E9)
+  //     const dateTime = (new Date().toISOString().split('.')[0].replace(/-|:/g,'').replace(/T/g,'_'))
+  //     const fileName=file.originalname.toLowerCase().replace(/[^a-z0-9-.]/g,'-').replace(/(.jpeg)$/,'.jpg')
+  //     // const newFileName = (new Date().toISOString().split('.')[0].replace(/-|:/g,'').replace(/T/g,'_')) + '-' + Math.round(Math.random() * 1E9)
+
+  //     cb(null, `${dateTime}_${fileName}`)
+  //     // cb(null, file.fieldname + '-' + uniqueSuffix)
+  //   },
+
+  // })
+  const storage = multer.memoryStorage()
+  const fileFilter = (req, file, cb) => {
+    // if(file.size>1024*1024){
+    //   cb('Max:1Mb',false)
+    // }else{
+    //   cb(null,true)
+    // }
+    if (file.mimetype === 'image/jpeg' || file.mimetype === 'image/png') {
+      cb(null, true);
+    } else {
+      cb(null, false);
+    }
+  }
+  const upload = multer({ storage: storage,fileFilter:fileFilter })
+  
+  // const upload=multer({
+  //   dest:'C:/tmp/',
+  //   fileFilter:(req,file,cb)=>{
+      
+  //     if(file.size>1024*1024){
+  //       cb('File size error. Max 1Mb')
+  //     }else{
+  //       cb()
+  //     }
+  //   }
+  // })
+
+  setRoutes(app, route,upload.array('file',50), (req, res, next) => {
+    if (restControllers.s3[req.params.func]) {
+      passport(req)
+        .then((sessionDoc) => {
+          if (sessionDoc) {
+            restControllers.s3[req.params.func](db, sessionDoc, req)
               .then((data) => {
                 if (data == undefined) res.json({ success: true })
                 else if (data == null) res.json({ success: true })
