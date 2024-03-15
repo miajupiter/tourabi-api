@@ -23,16 +23,7 @@ module.exports = function (dbModel) {
 			publishEnd: { type: Date, default: Date.now, index: true },
 			groupMin: { type: Number, default: 0 },
 			groupMax: { type: Number, default: 0 },
-			images: [{
-				title: { type: String, default: '' },
-				src: { type: String, default: '' },
-				width: { type: Number, default: 800 },
-				height: { type: Number, default: 800 },
-				style: { type: String, default: '' },
-				alt: { type: String, default: '' },
-				thumbnail: { type: String, default: '' },
-			}],
-
+			images: [{ type: ObjectId, ref: 's3images'}],
 			travelPlan: [{
 				step: { type: Number, default: 0 },
 				title: { type: String, default: '' },

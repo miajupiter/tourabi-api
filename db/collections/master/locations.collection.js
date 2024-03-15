@@ -2,24 +2,16 @@ const collectionName = path.basename(__filename, '.collection.js')
 module.exports = function (dbModel) {
 	let schema = mongoose.Schema(
 		{
-			destination: { type: mongoose.Types.ObjectId, ref: 'destinations',required: true, index: true },
-			title: { type: String, default:'', index: true },
+			destination: { type: mongoose.Types.ObjectId, ref: 'destinations', required: true, index: true },
+			title: { type: String, default: '', index: true },
 			description: { type: String, default: '' },
-			country: { type: String, default: '',index:true },
-			images: [{
-        title: { type: String, default: '' },
-        src: { type: String, default: '' },
-        width: { type: Number, default: 800 },
-        height: { type: Number, default: 800 },
-        style: { type: String, default: '' },
-        alt: { type: String, default: '' },
-        thumbnail: { type: String, default: '' },
-      }],
+			country: { type: String, default: '', index: true },
+			images: [{ type: ObjectId, ref: 's3images' }],
 			passive: { type: Boolean, default: false, index: true },
 			createdDate: { type: Date, default: Date.now },
-			createdBy:{type:String,default:''},
+			createdBy: { type: String, default: '' },
 			modifiedDate: { type: Date, default: Date.now, index: true },
-			modifiedBy:{type:String,default:'',index:true}
+			modifiedBy: { type: String, default: '', index: true }
 		},
 		{ versionKey: false }
 	)

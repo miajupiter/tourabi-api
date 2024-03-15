@@ -9,7 +9,7 @@ module.exports = function (dbModel) {
       firstName: { type: String, default:'',  required11: true },
       lastName: { type: String,default:'',  required11: true },
       gender: { type: String, default: '', enum: ['', 'female', 'male', 'other'] },
-      image: { type: String, default: '' },
+      image: { type: ObjectId, ref: 's3images',  default: null },
       dateOfBirth: { type: String, default: '2000-01-01', index:true },
       phoneNumber: { type: String, default:'',  required11: true, index:true },
       address: {

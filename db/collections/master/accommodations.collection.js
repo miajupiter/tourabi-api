@@ -10,15 +10,7 @@ module.exports = function (dbModel) {
       capacity: { type: Number, default: 0 },
       country: { type: String, default: '', index: true },
       addressText: { type: String, default: '' },
-      images: [{
-        title: { type: String, default: '' },
-        src: { type: String, default: '' },
-        width: { type: Number, default: 400 },
-        height: { type: Number, default: 400 },
-        style: { type: String, default: '' },
-        alt: { type: String, default: '' },
-        thumbnail: { type: String, default: '' },
-      }],
+      images: [{ type: mongoose.Schema.Types.ObjectId, ref: 's3images' }],
       distanceFrom: [{
         location: { type: String, default: '' },
         distance: { type: Number, default: 0 },

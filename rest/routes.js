@@ -155,32 +155,7 @@ async function s3Controllers(app, route) {
   const multer=require('multer')
   const appName=require('../package.json').name
   const os=require('os')
-  // const storage = multer.diskStorage({
-  //   destination: function (req, file, cb) {
-  //     if(process.env.NODE_ENV!='production'){
-  //       cb(null,`c:/tmp/${appName}`)
-  //     }else{
-  //       cb(null, `${os.tmpdir()}/${appName}`)
-  //     }
-      
-  //   },
-  //   filename: function (req, file, cb) {
-  //     console.log('rename file.destination:',file.destination)
-  //     console.log('rename file.fieldname:',file.fieldname)
-  //     console.log('rename file.originalname:',file.originalname)
-  //     console.log('rename file.path:',file.path)
-  //     console.log('rename file.size:',file.size)
-      
-  //     // const uniqueSuffix = (new Date().toISOString().split('.')[0].replace(/-|:/g,'').replace(/T/g,'_')) + '-' + Math.round(Math.random() * 1E9)
-  //     const dateTime = (new Date().toISOString().split('.')[0].replace(/-|:/g,'').replace(/T/g,'_'))
-  //     const fileName=file.originalname.toLowerCase().replace(/[^a-z0-9-.]/g,'-').replace(/(.jpeg)$/,'.jpg')
-  //     // const newFileName = (new Date().toISOString().split('.')[0].replace(/-|:/g,'').replace(/T/g,'_')) + '-' + Math.round(Math.random() * 1E9)
-
-  //     cb(null, `${dateTime}_${fileName}`)
-  //     // cb(null, file.fieldname + '-' + uniqueSuffix)
-  //   },
-
-  // })
+ 
   const storage = multer.memoryStorage()
   const fileFilter = (req, file, cb) => {
     // if(file.size>1024*1024){
@@ -208,7 +183,7 @@ async function s3Controllers(app, route) {
   //   }
   // })
 
-  setRoutes(app, route,upload.array('file',50), (req, res, next) => {
+  setRoutes(app, route,upload.array('file',1), (req, res, next) => {
     if (restControllers.s3[req.params.func]) {
       passport(req)
         .then((sessionDoc) => {

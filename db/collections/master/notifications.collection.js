@@ -6,7 +6,7 @@ module.exports = function (dbModel) {
       userId: { type: ObjectId, ref: 'users', index: true },
       title: { type: String, default: '' },
       body: { type: String, default: '' },
-      image: { type: String, default: '' },
+      image: { type: ObjectId, ref: 's3images', default:null },
       read: { type: Boolean, default: false, index: true },
       createdDate: { type: Date, default: Date.now },
     },
