@@ -13,6 +13,7 @@ module.exports = (dbModel, sessionDoc, req) => new Promise(async (resolve, rejec
       }
       break
 
+      
     default:
       restError.method(req, reject)
       break
@@ -23,6 +24,7 @@ function getOne(dbModel, sessionDoc, req) {
   return new Promise((resolve, reject) => {
     dbModel.destinations
       .findOne({ _id: req.params.param1, passive: false })
+      .populate('images')
       .then(doc => {
         if (dbNull(doc, reject)) {
           resolve(doc)
@@ -35,7 +37,9 @@ function getOne(dbModel, sessionDoc, req) {
 
 function getList(dbModel, sessionDoc, req) {
   return new Promise((resolve, reject) => {
-    const search=getSearchParams(req,{passive:false})
+    const search=getSearchParams(req,{passive:false},{
+      populate:'images'
+    })
 
     dbModel.destinations.paginate(search.filter, search.options)
     .then(result => {

@@ -55,6 +55,7 @@ function getOne(dbModel, sessionDoc, req) {
   return new Promise((resolve, reject) => {
     dbModel.tours
       .findOne({ _id: req.params.param1 })
+      .populate('images')
       .then(doc => {
         if (dbNull(doc, reject)) {
           resolve(doc)
@@ -67,7 +68,9 @@ function getOne(dbModel, sessionDoc, req) {
 function getList(dbModel, sessionDoc, req) {
   return new Promise((resolve, reject) => {
  
-    const search = getSearchParams(req, { passive: false })
+    const search = getSearchParams(req, { passive: false },{
+      populate:'images'
+    })
     dbModel.tours.paginate(search.filter, search.options)
       .then(result => {
         result.docs.forEach(doc => {

@@ -33,6 +33,7 @@ function getOne(dbModel, sessionDoc, req) {
   return new Promise((resolve, reject) => {
     dbModel.locations
       .findOne({ _id: req.params.param1 })
+      .populate('images')
       .then(doc => {
         if (dbNull(doc, reject)) {
           resolve(doc)
@@ -46,7 +47,7 @@ function getList(dbModel, sessionDoc, req) {
   return new Promise((resolve, reject) => {
     const search=getSearchParams(req,{},{
       select: '_id title destination country images passive',
-      populate:[{path:'destination',select:'_id title'}]
+      populate:[{path:'destination',select:'_id title'},'images']
     })
 
     dbModel.locations.paginate(search.filter, search.options)
